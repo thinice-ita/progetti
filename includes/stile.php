@@ -3,36 +3,35 @@
  * Frammento di CSS condiviso tra le pagine, incluso direttamente (nessuna
  * dipendenza da framework esterni: prototipo semplice e autosufficiente).
  *
- * Palette e token in stile "Studio moderno": ardesia/blu, ombre morbide,
- * badge di stato con pallino, feedback tattile sui controlli.
+ * Palette e token in stile "Dossier istituzionale": carta, titoli serif di
+ * sistema, tratti sottili al posto delle ombre, verde scuro come accento.
  */
 ?>
 <style>
     :root {
-        --bg: #eef0f4;
-        --surface: #ffffff;
-        --ink: #1c2430;
-        --ink-soft: #606a79;
-        --ink-faint: #94a0b0;
-        --rule: #e1e4ea;
-        --rule-soft: #edeff3;
-        --accent: #33499e;
-        --accent-hover: #283a80;
-        --accent-soft: #e7eafb;
-        --accent-border: #b7c1ee;
-        --danger: #b3261e;
-        --danger-hover: #8f1e18;
-        --danger-soft: #fbe9e8;
-        --danger-soft-hover: #f6d9d7;
-        --amber: #8a5a06;
-        --amber-soft: #fdf0cf;
-        --green: #0f7a42;
-        --green-soft: #dcf3e4;
-        --radius-s: 6px;
-        --radius-m: 10px;
-        --radius-l: 14px;
-        --shadow-card: 0 4px 14px -8px rgba(28,36,48,.18);
-        --shadow-raised: 0 6px 18px -8px rgba(28,36,48,.28);
+        --bg: #f4f2ea;
+        --surface: #fffefb;
+        --ink: #2b2a24;
+        --ink-soft: #726e5f;
+        --ink-faint: #948f7c;
+        --rule: #ded8c6;
+        --neutral-soft: #eeece2;
+        --accent: #3f5a4d;
+        --accent-hover: #32493f;
+        --accent-soft: #e4e9e0;
+        --accent-border: #a9bdb0;
+        --danger: #9c4331;
+        --danger-hover: #7c3526;
+        --danger-soft: #f6e8e2;
+        --amber: #8a5a10;
+        --amber-soft: #f6ead0;
+        --green: #2c6b45;
+        --green-soft: #dcece0;
+        --radius-s: 3px;
+        --radius-m: 4px;
+        --radius-l: 4px;
+        --shadow-card: 0 1px 2px rgba(43,42,36,.07);
+        --font-serif: "Palatino Linotype", Palatino, Georgia, "Iowan Old Style", serif;
     }
     * { box-sizing: border-box; }
     body {
@@ -46,12 +45,36 @@
         max-width: 960px;
         margin: 0 auto;
         background: var(--surface);
+        border: 1px solid var(--rule);
         border-radius: var(--radius-l);
         padding: 2rem;
         box-shadow: var(--shadow-card);
     }
-    h1 { font-size: 1.55rem; font-weight: 700; letter-spacing: -.01em; margin-top: 0; }
-    h2 { font-size: 1.15rem; font-weight: 700; margin-top: 1.75rem; color: var(--ink); }
+    h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; color: var(--ink); }
+    h1 {
+        font-size: 1.6rem;
+        letter-spacing: -.005em;
+        margin-top: 0;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--ink);
+    }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; }
+
+    /* Testata di pagina: titolo del progetto e ricerca sulla stessa riga,
+       ricerca allineata a destra. Il filetto "da letterhead" si sposta
+       dall'h1 all'intera riga così la linea corre sotto entrambi. */
+    .progetto-testata {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        padding-bottom: 0.6rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--ink);
+    }
+    .progetto-testata h1 { margin: 0; padding-bottom: 0; border-bottom: none; }
+    .progetto-testata .ricerca-globale { margin: 0; flex-shrink: 0; }
 
     /* Stato di focus visibile per la navigazione da tastiera */
     a:focus-visible, button:focus-visible, input:focus-visible,
@@ -84,9 +107,9 @@
     textarea { min-height: 100px; resize: vertical; }
     button, a.btn {
         background: var(--accent);
-        color: #fff;
-        border: 1px solid transparent;
-        padding: 0.45rem 0.9rem;
+        color: #fdfcf8;
+        border: 1px solid var(--accent);
+        padding: 0.4rem 0.85rem;
         border-radius: var(--radius-s);
         font-size: 0.8rem;
         font-weight: 600;
@@ -94,15 +117,14 @@
         text-decoration: none;
         display: inline-block;
         line-height: 1.3;
-        box-shadow: 0 3px 10px -5px rgba(51,73,158,.6);
-        transition: background .12s, border-color .12s, box-shadow .12s, transform .08s;
+        transition: background .12s, border-color .12s, transform .08s;
     }
-    button:hover, a.btn:hover { background: var(--accent-hover); box-shadow: 0 5px 14px -5px rgba(51,73,158,.55); transform: translateY(-1px); }
-    button:active, a.btn:active { transform: translateY(0); box-shadow: 0 2px 6px -3px rgba(51,73,158,.5); }
-    a.btn-secondary { background: var(--rule-soft); color: var(--ink-soft); border-color: var(--rule); box-shadow: none; }
-    a.btn-secondary:hover { background: var(--rule); border-color: var(--rule); box-shadow: none; }
-    a.btn-danger { background: var(--danger-soft); color: var(--danger); border-color: transparent; box-shadow: none; }
-    a.btn-danger:hover { background: var(--danger-soft-hover); box-shadow: none; }
+    button:hover, a.btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    button:active, a.btn:active { transform: translateY(1px); }
+    a.btn-secondary { background: transparent; color: var(--accent); border-color: var(--accent); }
+    a.btn-secondary:hover { background: var(--accent-soft); border-color: var(--accent); }
+    a.btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+    a.btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); }
     .stato {
         background: var(--accent-soft);
         border-left: 4px solid var(--accent);
@@ -122,13 +144,13 @@
     .successo {
         background: var(--green-soft);
         border-left: 4px solid var(--green);
-        color: #0b5c33;
+        color: #1f4d34;
         padding: 0.8rem 1rem;
         margin: 1rem 0;
         border-radius: 0 var(--radius-s) var(--radius-s) 0;
     }
     .box-testo {
-        background: var(--rule-soft);
+        background: var(--surface);
         border: 1px solid var(--rule);
         border-radius: var(--radius-s);
         padding: 1rem;
@@ -140,54 +162,75 @@
     }
     table.elenco { width: 100%; border-collapse: collapse; margin-top: 1rem; font-variant-numeric: tabular-nums; }
     table.elenco th {
-        background: var(--rule-soft);
+        background: transparent;
         padding: 0.5rem 0.7rem;
         text-align: left;
-        border-bottom: 2px solid var(--rule);
-        font-size: 0.8rem;
+        border-bottom: 1px solid var(--ink);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-weight: 700;
         color: var(--ink-soft);
     }
-    table.elenco td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--rule-soft); vertical-align: middle; }
+    table.elenco td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+    table.elenco tbody tr:last-child td { border-bottom: 1px solid var(--ink); }
     table.elenco tr:hover { background: var(--accent-soft); }
-    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
-    .badge-da_fare { background: var(--rule-soft); color: var(--ink-soft); }
+    .badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: var(--radius-s);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-left: 0.5rem;
+    }
+    .badge-da_fare { background: var(--neutral-soft); color: var(--ink-soft); }
     .badge-in_corso { background: var(--amber-soft); color: var(--amber); }
     .badge-completato { background: var(--green-soft); color: var(--green); }
     .badge-da_fare::before, .badge-in_corso::before, .badge-completato::before {
         content: '';
         display: inline-block;
-        width: 0.42rem;
-        height: 0.42rem;
+        width: 0.4rem;
+        height: 0.4rem;
         border-radius: 50%;
         background: currentColor;
         margin-right: 0.35rem;
         vertical-align: middle;
     }
-    .step-card { border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 0.8rem 1rem; margin-bottom: 0.9rem; box-shadow: 0 2px 8px -5px rgba(28,36,48,.15); transition: outline .1s, box-shadow .15s; }
-    .step-card:hover { box-shadow: var(--shadow-card); }
+    .step-card {
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 var(--radius-s) var(--radius-s) 0;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.9rem;
+        transition: outline .1s;
+    }
     .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
     .step-date { font-size: 0.78rem; color: var(--ink-soft); margin: -0.2rem 0 0.6rem; font-variant-numeric: tabular-nums; }
 
     /* Step "completato": aspetto disattivato/grigio, ma resta interattivo (drag&drop
        e "+Nuovo" chiedono conferma e riaprono lo step invece di essere bloccati). */
-    .step-card.step-chiuso { background: var(--rule-soft) !important; border-color: var(--rule) !important; opacity: 0.72; }
+    .step-card.step-chiuso { background: var(--neutral-soft) !important; border-color: var(--rule) !important; opacity: 0.72; }
     .step-card.step-chiuso:hover { opacity: 0.95; }
     .step-card.step-chiuso .step-header strong { color: var(--ink-soft); }
 
-    /* Tavolozza tenue per distinguere visivamente gli step tra loro (assegnata ciclicamente) */
-    .step-colore-0 { background: #eef3fd; border-color: #c3d6f5; }
-    .step-colore-1 { background: #eaf8f1; border-color: #b9e6cb; }
-    .step-colore-2 { background: #fdf6e8; border-color: #f0ddaa; }
-    .step-colore-3 { background: #f6eefc; border-color: #ddc4f0; }
-    .step-colore-4 { background: #fdedf2; border-color: #f4c1d5; }
-    .step-colore-5 { background: #e9f9f8; border-color: #b0e2de; }
+    /* Tavolozza tenue, ispirata alle etichette di cartelle di un archivio, per
+       distinguere visivamente gli step tra loro (assegnata ciclicamente) */
+    .step-colore-0 { background: #eef1e5; border-color: #c9d3b4; }
+    .step-colore-1 { background: #f7f0dc; border-color: #e3cf9b; }
+    .step-colore-2 { background: #f7e9e2; border-color: #e5bfa9; }
+    .step-colore-3 { background: #eaeef1; border-color: #bfccd6; }
+    .step-colore-4 { background: #f1e9f0; border-color: #d3bcd1; }
+    .step-colore-5 { background: #e6f0ee; border-color: #aecdc6; }
 
     .sezione-liberi {
         border: 2px dashed var(--rule);
         border-radius: var(--radius-m);
         padding: 0.8rem;
         margin-bottom: 0.9rem;
-        background: var(--rule-soft);
+        background: var(--bg);
         transition: outline .1s;
     }
     .sezione-liberi-titolo { font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0.4rem; }
@@ -200,9 +243,9 @@
     .ordina-form select { display: inline-block; width: auto; margin: 0 0 0 0.4rem; padding: 0.3rem 0.5rem; font-size: 0.85rem; }
 
     details.evento {
-        border-left: 3px solid var(--rule);
+        border-left: 2px solid var(--rule);
         margin-bottom: 0.25rem;
-        background: var(--rule-soft);
+        background: var(--bg);
         border-radius: 0 var(--radius-s) var(--radius-s) 0;
     }
     details.evento[open] { background: var(--surface); }
@@ -272,7 +315,7 @@
         border-radius: var(--radius-m);
         padding: 1rem;
         text-align: center;
-        background: var(--rule-soft);
+        background: var(--bg);
         margin-bottom: 0.6rem;
         transition: background .1s, border-color .1s;
     }
@@ -290,7 +333,7 @@
         justify-content: space-between;
         gap: 0.5rem;
         padding: 0.3rem 0;
-        border-bottom: 1px solid var(--rule-soft);
+        border-bottom: 1px solid var(--rule);
         font-size: 0.85rem;
     }
     .allegato-elimina {
@@ -310,10 +353,10 @@
         display: inline-flex;
         align-items: center;
         padding: 0.15rem 0.5rem;
-        border-radius: 999px;
+        border-radius: var(--radius-s);
         font-size: 0.72rem;
         font-weight: 600;
-        background: var(--rule-soft);
+        background: var(--neutral-soft);
         color: var(--ink-soft);
         white-space: nowrap;
         flex-shrink: 0;
@@ -334,7 +377,7 @@
         opacity: 0.7;
         flex-shrink: 0;
     }
-    .icona-azione:hover { opacity: 1; background: rgba(28,36,48,0.07); }
+    .icona-azione:hover { opacity: 1; background: rgba(43,42,36,0.08); }
 
     /* Zona stampe: raggruppa le azioni di stampa separandole da modifica/elimina,
        cosi non si confondono con le azioni di gestione dello step/evento. Dentro
@@ -353,7 +396,7 @@
         display: inline-flex;
         align-items: center;
         gap: 0.3rem;
-        background: var(--rule-soft);
+        background: var(--surface);
         color: var(--ink-soft);
         border: 1px dashed var(--rule);
         padding: 0.3rem 0.65rem;
@@ -363,7 +406,18 @@
         text-decoration: none;
         cursor: pointer;
     }
-    .btn-stampa:hover { background: var(--rule); border-color: var(--ink-faint); }
+    .btn-stampa:hover { background: var(--neutral-soft); border-color: var(--ink-faint); }
+
+    /* L'area stampe a livello di progetto va tenuta chiaramente staccata dai
+       pulsanti di gestione (Modifica/Nuovo step/Elimina), così non si legge
+       come parte dello stesso gruppo di azioni. */
+    .zona-stampe-progetto {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+        padding-top: 1.1rem;
+        border-top: 1px dashed var(--rule);
+    }
 
     /* Riga separata per le azioni che aggiungono contenuto a uno step (+ Evento,
        Registrazione), distinta dalle icone di gestione dello step nell'header. */
@@ -373,7 +427,7 @@
         display: inline-flex;
         align-items: center;
         padding: 0.15rem 0.5rem;
-        border-radius: 999px;
+        border-radius: var(--radius-s);
         font-size: 0.72rem;
         font-weight: 600;
         background: var(--accent-soft);
@@ -396,7 +450,7 @@
         justify-content: space-between;
         gap: 0.5rem;
         padding: 0.2rem 0;
-        border-bottom: 1px solid var(--rule-soft);
+        border-bottom: 1px solid var(--rule);
         font-size: 0.85rem;
     }
     .task-check { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; flex: 1 1 auto; min-width: 0; }

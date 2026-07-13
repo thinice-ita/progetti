@@ -175,7 +175,13 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
 <div class="contenitore">
     <a class="link-indietro" href="index.php">&larr; Elenco progetti</a>
 
-    <h1><?= h($progetto['titolo']) ?></h1>
+    <div class="progetto-testata">
+        <h1><?= h($progetto['titolo']) ?></h1>
+        <div class="ricerca-globale">
+            <input type="search" id="ricerca-input" placeholder="🔍 Cerca in questo progetto (eventi, step, task)...">
+            <span id="ricerca-conteggio" class="ricerca-conteggio"></span>
+        </div>
+    </div>
 
     <?php if ($progetto['descrizione']): ?>
         <div class="box-testo"><?= nl2br(h($progetto['descrizione'])) ?></div>
@@ -201,11 +207,6 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
            title="Stampa cartellina progetto">🖨️ Cartellina progetto</a>
         <a class="btn-stampa" href="report_progetto.php?id=<?= $idProgetto ?>" target="_blank"
            title="Report completo del progetto, esplorabile e stampabile">📋 Report progetto</a>
-    </div>
-
-    <div class="ricerca-globale">
-        <input type="search" id="ricerca-input" placeholder="🔍 Cerca in questo progetto (eventi, step, task)...">
-        <span id="ricerca-conteggio" class="ricerca-conteggio"></span>
     </div>
 
     <?php if ($tuttiEventi): ?>

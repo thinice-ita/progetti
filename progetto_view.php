@@ -73,20 +73,6 @@ $etichetteStato = ['da_fare' => 'Da fare', 'in_corso' => 'In corso', 'completato
 $iconeTipo      = ['nota' => '📝', 'riunione' => '👥', 'email' => '✉️', 'registrazione' => '🎙️'];
 
 /**
- * Testo della pillola dei task di un evento ("5 task · 3 da fare"), o stringa vuota se non ci sono task.
- */
-function etichettaPillolaTask(array $task): string
-{
-    if (!$task) {
-        return '';
-    }
-
-    $nonFatti = count(array_filter($task, static fn(array $t): bool => !$t['fatto']));
-
-    return count($task) . ' task · ' . ($nonFatti > 0 ? $nonFatti . ' da fare' : 'tutti fatti');
-}
-
-/**
  * Stampa un evento come blocco <details> compatto ed espandibile, trascinabile
  * verso un'altra zona (step o "eventi liberi").
  */
@@ -194,6 +180,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
 
     <div class="azioni">
         <a class="btn btn-secondary" href="progetto_form.php?id=<?= $idProgetto ?>">Modifica progetto</a>
+        <a class="btn btn-secondary" href="linea-tempo.php?id=<?= $idProgetto ?>">🕰️ Linea del tempo</a>
         <a class="btn" href="step_form.php?fk_progetto=<?= $idProgetto ?>">+ Nuovo step</a>
         <a class="btn" href="evento_form.php?fk_progetto=<?= $idProgetto ?>">+ Evento libero</a>
         <a class="btn" href="registrazione_form.php?fk_progetto=<?= $idProgetto ?>">🎙️ Registrazione libera</a>

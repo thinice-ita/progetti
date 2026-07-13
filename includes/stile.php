@@ -32,6 +32,15 @@
         --radius-l: 4px;
         --shadow-card: 0 1px 2px rgba(43,42,36,.07);
         --font-serif: "Palatino Linotype", Palatino, Georgia, "Iowan Old Style", serif;
+
+        /* Tavolozza "etichette d'archivio" degli step: unica fonte, usata sia
+           dalle step-card sia dai marker della linea del tempo. */
+        --step0-bg: #eef1e5; --step0-rule: #c9d3b4;
+        --step1-bg: #f7f0dc; --step1-rule: #e3cf9b;
+        --step2-bg: #f7e9e2; --step2-rule: #e5bfa9;
+        --step3-bg: #eaeef1; --step3-rule: #bfccd6;
+        --step4-bg: #f1e9f0; --step4-rule: #d3bcd1;
+        --step5-bg: #e6f0ee; --step5-rule: #aecdc6;
     }
     * { box-sizing: border-box; }
     body {
@@ -218,12 +227,12 @@
 
     /* Tavolozza tenue, ispirata alle etichette di cartelle di un archivio, per
        distinguere visivamente gli step tra loro (assegnata ciclicamente) */
-    .step-colore-0 { background: #eef1e5; border-color: #c9d3b4; }
-    .step-colore-1 { background: #f7f0dc; border-color: #e3cf9b; }
-    .step-colore-2 { background: #f7e9e2; border-color: #e5bfa9; }
-    .step-colore-3 { background: #eaeef1; border-color: #bfccd6; }
-    .step-colore-4 { background: #f1e9f0; border-color: #d3bcd1; }
-    .step-colore-5 { background: #e6f0ee; border-color: #aecdc6; }
+    .step-colore-0 { background: var(--step0-bg); border-color: var(--step0-rule); }
+    .step-colore-1 { background: var(--step1-bg); border-color: var(--step1-rule); }
+    .step-colore-2 { background: var(--step2-bg); border-color: var(--step2-rule); }
+    .step-colore-3 { background: var(--step3-bg); border-color: var(--step3-rule); }
+    .step-colore-4 { background: var(--step4-bg); border-color: var(--step4-rule); }
+    .step-colore-5 { background: var(--step5-bg); border-color: var(--step5-rule); }
 
     .sezione-liberi {
         border: 2px dashed var(--rule);
@@ -575,4 +584,118 @@
     .campi-riga { display: flex; gap: 1rem; }
     .campi-riga > div { flex: 1 1 0; min-width: 0; }
     .campi-riga label { font-size: 0.85rem; }
+
+    /* ===== Linea del tempo (linea-tempo.php) ===== */
+    .lt-sottotitolo { font-size: 0.82rem; color: var(--ink-soft); margin: 0 0 1rem; }
+
+    .lt-legenda { display: flex; flex-wrap: wrap; gap: 1.1rem; margin: 0 0 1.6rem; font-size: 0.78rem; color: var(--ink-soft); }
+    .lt-legenda span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .lt-legenda-tab { width: 1.1rem; height: 0.75rem; border-radius: 2px; background: var(--step0-bg); border: 1px solid var(--step0-rule); display: inline-block; }
+    .lt-legenda-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; border: 1px dashed var(--ink-faint); display: inline-block; }
+    .lt-legenda-linea { width: 1.1rem; height: 0; border-top: 1px dashed var(--ink-faint); display: inline-block; }
+
+    .linea-tempo-scroll { overflow-x: auto; padding-bottom: 0.5rem; }
+    .lt-pista { position: relative; height: 27rem; min-width: 920px; }
+
+    .lt-asse { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--ink); transform: translateY(-1px); }
+
+    .lt-oggi { position: absolute; top: 1.5rem; bottom: 2.6rem; border-left: 1px dashed var(--ink-faint); transform: translateX(-50%); }
+    .lt-oggi-etichetta {
+        position: absolute; top: -1.3rem; left: 50%; transform: translateX(-50%);
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+        color: var(--ink-faint); white-space: nowrap;
+    }
+
+    .lt-marker { position: absolute; z-index: 1; }
+    .lt-marker.lt-aperta { z-index: 40; }
+
+    /* --lt-livello: assegnata via JS quando un marker si accavalla con un altro
+       nella stessa corsia (es. due step aperti lo stesso giorno) — lo allontana
+       dalla linea invece di sovrapporlo, con lo stelo che si allunga di pari passo. */
+    .lt-sopra { bottom: 50%; margin-bottom: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); transform: translateX(-50%); }
+    .lt-sotto { top: 50%; margin-top: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); transform: translateX(-50%); }
+    .lt-sopra::after, .lt-sotto::after { content: ''; position: absolute; left: 50%; width: 1px; background: var(--rule); }
+    .lt-sopra::after { bottom: calc(-1 * (0.4rem + var(--lt-livello, 0) * 2.4rem)); height: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); }
+    .lt-sotto::after { top: calc(-1 * (0.4rem + var(--lt-livello, 0) * 2.4rem)); height: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); }
+
+    .lt-marker-toggle { border: none; cursor: pointer; font: inherit; display: block; }
+
+    .lt-tab {
+        padding: 0.3rem 0.6rem;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-s);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--ink);
+        white-space: nowrap;
+        max-width: 9.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        box-shadow: var(--shadow-card);
+    }
+    .lt-tab-colore-0 { background: var(--step0-bg); border-color: var(--step0-rule); }
+    .lt-tab-colore-1 { background: var(--step1-bg); border-color: var(--step1-rule); }
+    .lt-tab-colore-2 { background: var(--step2-bg); border-color: var(--step2-rule); }
+    .lt-tab-colore-3 { background: var(--step3-bg); border-color: var(--step3-rule); }
+    .lt-tab-colore-4 { background: var(--step4-bg); border-color: var(--step4-rule); }
+    .lt-tab-colore-5 { background: var(--step5-bg); border-color: var(--step5-rule); }
+
+    .lt-dot {
+        width: 1.15rem; height: 1.15rem;
+        border-radius: 50%;
+        border: 1px dashed var(--ink-faint);
+        background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.62rem; font-weight: 700; color: var(--ink-soft);
+    }
+
+    .lt-callout {
+        display: none;
+        position: absolute; left: 50%; transform: translateX(-50%);
+        width: 15.5rem; max-height: 9.5rem; overflow-y: auto;
+        background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-m);
+        box-shadow: 0 6px 16px -6px rgba(43,42,36,.25);
+        padding: 0.5rem;
+        text-align: left;
+    }
+    .lt-aperta .lt-callout { display: block; }
+    .lt-sopra .lt-callout { bottom: 100%; margin-bottom: 0.6rem; }
+    .lt-sotto .lt-callout { top: 100%; margin-top: 0.6rem; }
+
+    .lt-callout-titolo {
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+        color: var(--ink-faint); margin: 0.1rem 0.3rem 0.4rem;
+    }
+
+    .lt-evento-riga { border-bottom: 1px solid var(--neutral-soft); }
+    .lt-evento-riga:last-child { border-bottom: none; }
+    .lt-evento-riga-toggle {
+        display: flex; align-items: center; gap: 0.4rem;
+        width: 100%; background: none; border: none; text-align: left; cursor: pointer;
+        padding: 0.4rem 0.3rem; font: inherit; color: var(--ink); border-radius: 3px;
+    }
+    .lt-evento-riga-toggle:hover { background: var(--accent-soft); }
+    .lt-evento-riga-titolo { flex: 1 1 auto; font-size: 0.82rem; font-weight: 600; }
+    .lt-evento-riga-data { font-size: 0.7rem; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    .lt-evento-dettaglio { display: none; padding: 0 0.5rem 0.6rem; font-size: 0.8rem; color: var(--ink-soft); line-height: 1.5; }
+    .lt-evento-aperto .lt-evento-dettaglio { display: block; }
+    .lt-evento-dettaglio .lt-badge-riga { display: flex; gap: 0.35rem; margin-top: 0.4rem; flex-wrap: wrap; align-items: center; }
+    .lt-evento-dettaglio a { color: var(--accent); font-size: 0.78rem; }
+
+    .lt-mesi { position: relative; height: 1.4rem; min-width: 920px; border-top: 1px solid var(--rule); margin-top: 0.4rem; }
+    .lt-mesi span {
+        position: absolute; top: 0.35rem; transform: translateX(-50%);
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+        color: var(--ink-faint); white-space: nowrap;
+    }
+
+    .lt-nota-densita, .lt-nota-vuota {
+        margin-top: 1.4rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--rule);
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+        line-height: 1.6;
+    }
 </style>

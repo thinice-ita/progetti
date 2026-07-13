@@ -28,6 +28,49 @@ function formattaDataOra(?string $data): string
     return $ts ? date('d/m/Y H:i', $ts) : '';
 }
 
+/**
+ * Abbreviazione italiana (3 lettere maiuscole) del mese 1-12, per le etichette
+ * della linea del tempo (non si usa date()/setlocale per non dipendere dalle
+ * locale installate sul sistema).
+ */
+function meseAbbreviato(int $mese): string
+{
+    static $mesi = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
+
+    return $mesi[$mese - 1] ?? '';
+}
+
+/**
+ * Data breve "12 mag" (giorno + mese abbreviato minuscolo), per le etichette
+ * compatte della linea del tempo.
+ */
+function formattaDataBreve(?string $data): string
+{
+    if (!$data) {
+        return '';
+    }
+    $ts = strtotime($data);
+    if (!$ts) {
+        return '';
+    }
+
+    return ((int) date('j', $ts)) . ' ' . mb_strtolower(meseAbbreviato((int) date('n', $ts)));
+}
+
+/**
+ * Testo della pillola dei task di un evento ("5 task · 3 da fare"), o stringa vuota se non ci sono task.
+ */
+function etichettaPillolaTask(array $task): string
+{
+    if (!$task) {
+        return '';
+    }
+
+    $nonFatti = count(array_filter($task, static fn(array $t): bool => !$t['fatto']));
+
+    return count($task) . ' task · ' . ($nonFatti > 0 ? $nonFatti . ' da fare' : 'tutti fatti');
+}
+
 function redirect(string $url): void
 {
     header('Location: ' . $url);

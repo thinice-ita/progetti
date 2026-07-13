@@ -37,21 +37,24 @@
     }
     textarea { min-height: 100px; resize: vertical; }
     button, a.btn {
-        background: #2563eb;
+        background: #4f6ef2;
         color: #fff;
-        border: none;
-        padding: 0.6rem 1.2rem;
+        border: 1px solid transparent;
+        padding: 0.4rem 0.85rem;
         border-radius: 6px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        font-weight: 600;
         cursor: pointer;
         text-decoration: none;
         display: inline-block;
+        line-height: 1.3;
+        transition: background .12s, border-color .12s;
     }
-    button:hover, a.btn:hover { background: #1d4ed8; }
-    a.btn-secondary { background: #e5e7eb; color: #222; }
-    a.btn-secondary:hover { background: #d1d5db; }
-    a.btn-danger { background: #dc2626; }
-    a.btn-danger:hover { background: #b91c1c; }
+    button:hover, a.btn:hover { background: #3c58d6; }
+    a.btn-secondary { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+    a.btn-secondary:hover { background: #e2e8f0; border-color: #cbd5e1; }
+    a.btn-danger { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+    a.btn-danger:hover { background: #fee2e2; border-color: #fca5a5; }
     .stato {
         background: #eef2ff;
         border-left: 4px solid #2563eb;
@@ -271,6 +274,39 @@
         flex-shrink: 0;
     }
     .icona-azione:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+
+    /* Zona stampe: raggruppa le azioni di stampa separandole da modifica/elimina,
+       cosi non si confondono con le azioni di gestione dello step/evento. Dentro
+       una riga di icone esistente si separa con un divisore; da sola (a livello
+       progetto) mostra anche un'etichetta. */
+    .zona-stampe { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .zona-stampe-titolo {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #94a3b8;
+    }
+    .azioni-icone .zona-stampe { padding-left: 0.35rem; margin-left: 0.15rem; border-left: 1px solid #e2e8f0; }
+    .btn-stampa {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: #f8fafc;
+        color: #475569;
+        border: 1px dashed #cbd5e1;
+        padding: 0.3rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-stampa:hover { background: #f1f5f9; border-color: #94a3b8; }
+
+    /* Riga separata per le azioni che aggiungono contenuto a uno step (+ Evento,
+       Registrazione), distinta dalle icone di gestione dello step nell'header. */
+    .step-azioni-contenuto { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.4rem 0 0.8rem; }
 
     .badge-task {
         display: inline-flex;

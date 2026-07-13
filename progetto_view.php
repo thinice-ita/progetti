@@ -113,6 +113,10 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 <a href="evento_form.php?id=<?= $idEvento ?>" class="icona-azione" title="Modifica">✏️</a>
                 <a href="evento_delete.php?id=<?= $idEvento ?>" class="icona-azione icona-azione-elimina" title="Elimina"
                    onclick="return confirm('Eliminare questo evento?');">🗑️</a>
+                <span class="zona-stampe">
+                    <a href="stampa_cartellina.php?tipo=evento&id=<?= $idEvento ?>" class="icona-azione" target="_blank"
+                       title="Stampa cartellina evento">🖨️</a>
+                </span>
             </span>
         </summary>
         <div class="evento-corpo">
@@ -189,6 +193,12 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
            onclick="return confirm('Eliminare questo progetto e tutto il suo contenuto?');">Elimina progetto</a>
     </div>
 
+    <div class="zona-stampe zona-stampe-progetto">
+        <span class="zona-stampe-titolo">Stampe</span>
+        <a class="btn-stampa" href="stampa_cartellina.php?tipo=progetto&id=<?= $idProgetto ?>" target="_blank"
+           title="Stampa cartellina progetto">🖨️ Cartellina progetto</a>
+    </div>
+
     <div class="ricerca-globale">
         <input type="search" id="ricerca-input" placeholder="🔍 Cerca in questo progetto (eventi, step, task)...">
         <span id="ricerca-conteggio" class="ricerca-conteggio"></span>
@@ -235,12 +245,14 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                     <strong><?= h($step['nome']) ?></strong>
                     <span class="badge badge-<?= h($step['stato']) ?>"><?= h($etichetteStato[$step['stato']] ?? $step['stato']) ?></span>
                 </div>
-                <div class="azioni">
-                    <a class="btn btn-secondary" href="step_form.php?id=<?= $idStep ?>">Modifica</a>
-                    <a class="btn btn-danger" href="step_delete.php?id=<?= $idStep ?>"
-                       onclick="return confirm('Eliminare questo step? Gli eventi collegati restano nel progetto e tornano liberi.');">Elimina</a>
-                    <a class="btn azione-riapertura" href="evento_form.php?fk_step=<?= $idStep ?>">+ Evento</a>
-                    <a class="btn azione-riapertura" href="registrazione_form.php?fk_step=<?= $idStep ?>">🎙️ Registrazione</a>
+                <div class="azioni azioni-icone">
+                    <a class="icona-azione" href="step_form.php?id=<?= $idStep ?>" title="Modifica step">✏️</a>
+                    <a class="icona-azione icona-azione-elimina" href="step_delete.php?id=<?= $idStep ?>" title="Elimina step"
+                       onclick="return confirm('Eliminare questo step? Gli eventi collegati restano nel progetto e tornano liberi.');">🗑️</a>
+                    <span class="zona-stampe">
+                        <a class="icona-azione" href="stampa_cartellina.php?tipo=step&id=<?= $idStep ?>" target="_blank"
+                           title="Stampa cartellina step">🖨️</a>
+                    </span>
                 </div>
             </div>
 
@@ -249,6 +261,11 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 &middot; Inizio: <?= ($step['data_inizio'] ?? null) ? formattaData($step['data_inizio']) : '—' ?>
                 &middot; Chiusura: <?= ($step['data_chiusura'] ?? null) ? formattaData($step['data_chiusura']) : '—' ?>
             </p>
+
+            <div class="step-azioni-contenuto">
+                <a class="btn azione-riapertura" href="evento_form.php?fk_step=<?= $idStep ?>">+ Evento</a>
+                <a class="btn azione-riapertura" href="registrazione_form.php?fk_step=<?= $idStep ?>">🎙️ Registrazione</a>
+            </div>
 
             <?php if ($step['descrizione']): ?>
                 <p><?= nl2br(h($step['descrizione'])) ?></p>

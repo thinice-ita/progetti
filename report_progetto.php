@@ -279,6 +279,7 @@ function reportStampaEvento(array $evento, array $allegatiPerEvento, array $task
     <button type="button" id="btn-toggle-step">Apri tutti gli step</button>
     <button type="button" id="btn-toggle-eventi">Apri tutti gli eventi</button>
     <button type="button" class="stampa-btn" onclick="window.print()">🖨️ Stampa</button>
+    <button type="button" onclick="window.close()">Chiudi</button>
 </div>
 
 <span class="pillola-sezione">Progetto</span>

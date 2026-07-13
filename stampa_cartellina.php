@@ -147,6 +147,7 @@ $titoloPagina = 'Cartellina ' . $tipo . ' — ' . ($progetto['titolo'] ?? '');
 
 <div class="stampa-toolbar">
     <button type="button" onclick="window.print()">🖨️ Stampa (A3 orizzontale)</button>
+    <button type="button" onclick="window.close()">Chiudi</button>
 </div>
 
 <div class="cartellina-foglio">

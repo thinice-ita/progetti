@@ -173,6 +173,8 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
 </head>
 <body>
 <div class="contenitore">
+    <a class="link-indietro" href="index.php">&larr; Elenco progetti</a>
+
     <h1><?= h($progetto['titolo']) ?></h1>
 
     <?php if ($progetto['descrizione']): ?>

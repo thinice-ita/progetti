@@ -197,6 +197,8 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
         <span class="zona-stampe-titolo">Stampe</span>
         <a class="btn-stampa" href="stampa_cartellina.php?tipo=progetto&id=<?= $idProgetto ?>" target="_blank"
            title="Stampa cartellina progetto">🖨️ Cartellina progetto</a>
+        <a class="btn-stampa" href="report_progetto.php?id=<?= $idProgetto ?>" target="_blank"
+           title="Report completo del progetto, esplorabile e stampabile">📋 Report progetto</a>
     </div>
 
     <div class="ricerca-globale">

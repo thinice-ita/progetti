@@ -51,6 +51,7 @@ function estraiContesto(string $testo, string $query, int $raggio = 70): string
 }
 
 $pattern = '%' . addcslashes($query, '%_\\') . '%';
+$linkProgetto = 'progetto_view.php?id=' . $idProgetto . '&q=' . rawurlencode($query);
 $risultati = [];
 
 // Step: nome e descrizione
@@ -62,7 +63,7 @@ $stmt = $pdo->prepare(
 $stmt->execute([$idProgetto, $pattern, $pattern]);
 
 foreach ($stmt->fetchAll() as $step) {
-    $link = 'progetto_view.php?id=' . $idProgetto . '#step-' . $step['id_step'];
+    $link = $linkProgetto . '#step-' . $step['id_step'];
 
     if (mb_stripos($step['nome'], $query) !== false) {
         $risultati[] = [
@@ -90,7 +91,7 @@ $stmt = $pdo->prepare(
 $stmt->execute([$idProgetto, $pattern, $pattern]);
 
 foreach ($stmt->fetchAll() as $evento) {
-    $link = 'progetto_view.php?id=' . $idProgetto . '#evento-' . $evento['id_evento'];
+    $link = $linkProgetto . '#evento-' . $evento['id_evento'];
     $dove = $evento['nome_step'] ? ' (step: ' . $evento['nome_step'] . ')' : ' (evento libero)';
 
     if (mb_stripos($evento['titolo'], $query) !== false) {
@@ -122,7 +123,7 @@ foreach ($stmt->fetchAll() as $task) {
     $risultati[] = [
         'posizione' => "Task nell'evento: " . $task['titolo_evento'],
         'contesto'  => estraiContesto($task['testo'], $query),
-        'link'      => 'progetto_view.php?id=' . $idProgetto . '#evento-' . $task['id_evento'],
+        'link'      => $linkProgetto . '#evento-' . $task['id_evento'],
     ];
 }
 

@@ -628,19 +628,101 @@ document.addEventListener('change', function (e) {
 });
 
 /**
- * Arrivando da un link della pagina di ricerca (#evento-123), apre il
- * relativo <details> anche nei browser che non lo fanno da soli seguendo
- * l'ancora, e lo porta a schermo.
+ * Evidenzia ogni occorrenza di $query dentro $radice avvolgendola in
+ * <mark class="evidenziazione-temporanea">, senza toccare script/style né
+ * i <mark> già creati. Restituisce l'elenco dei <mark> creati.
+ */
+function evidenziaTesto(radice, query) {
+    var queryLower = query.toLowerCase();
+    var marcati = [];
+
+    var walker = document.createTreeWalker(radice, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (nodo) {
+            if (nodo.parentNode.closest('script, style, mark')) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return nodo.textContent.toLowerCase().indexOf(queryLower) !== -1
+                ? NodeFilter.FILTER_ACCEPT
+                : NodeFilter.FILTER_SKIP;
+        }
+    });
+
+    var nodi = [];
+    var nodo;
+    while ((nodo = walker.nextNode())) {
+        nodi.push(nodo);
+    }
+
+    nodi.forEach(function (testoNodo) {
+        var testo = testoNodo.textContent;
+        var testoLower = testo.toLowerCase();
+        var frammento = document.createDocumentFragment();
+        var cursore = 0;
+        var pos;
+
+        while ((pos = testoLower.indexOf(queryLower, cursore)) !== -1) {
+            if (pos > cursore) {
+                frammento.appendChild(document.createTextNode(testo.slice(cursore, pos)));
+            }
+            var mark = document.createElement('mark');
+            mark.className = 'evidenziazione-temporanea';
+            mark.textContent = testo.slice(pos, pos + query.length);
+            frammento.appendChild(mark);
+            marcati.push(mark);
+            cursore = pos + query.length;
+        }
+        frammento.appendChild(document.createTextNode(testo.slice(cursore)));
+        testoNodo.parentNode.replaceChild(frammento, testoNodo);
+    });
+
+    return marcati;
+}
+
+/**
+ * Arrivando da un link della pagina di ricerca (#evento-123&q=parola), apre
+ * il relativo <details> anche nei browser che non lo fanno da soli seguendo
+ * l'ancora, ci scorre sopra, evidenzia la parola cercata e dopo 5 secondi
+ * toglie l'evidenziazione (dissolvenza, poi rimozione dei <mark>).
  */
 (function () {
     if (!location.hash) {
         return;
     }
     var bersaglio = document.getElementById(location.hash.slice(1));
-    if (bersaglio && bersaglio.tagName === 'DETAILS') {
-        bersaglio.open = true;
-        bersaglio.scrollIntoView({ block: 'center' });
+    if (!bersaglio) {
+        return;
     }
+    if (bersaglio.tagName === 'DETAILS') {
+        bersaglio.open = true;
+    }
+    bersaglio.scrollIntoView({ block: 'center' });
+
+    var query = new URLSearchParams(location.search).get('q');
+    if (!query) {
+        return;
+    }
+
+    var marcati = evidenziaTesto(bersaglio, query);
+    if (!marcati.length) {
+        return;
+    }
+
+    setTimeout(function () {
+        marcati.forEach(function (m) { m.classList.add('evidenziazione-svanita'); });
+        setTimeout(function () {
+            marcati.forEach(function (m) {
+                var parent = m.parentNode;
+                if (!parent) {
+                    return;
+                }
+                while (m.firstChild) {
+                    parent.insertBefore(m.firstChild, m);
+                }
+                parent.removeChild(m);
+                parent.normalize();
+            });
+        }, 1000);
+    }, 5000);
 })();
 </script>
 </body>

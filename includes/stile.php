@@ -559,6 +559,17 @@
         border-radius: 2px;
     }
 
+    /* Evidenziazione temporanea nel punto d'arrivo dopo un click da ricerca.php:
+       stessa resa del <mark> nei risultati, ma si dissolve dopo qualche secondo. */
+    mark.evidenziazione-temporanea {
+        background: var(--amber-soft);
+        color: var(--ink);
+        padding: 0 0.15rem;
+        border-radius: 2px;
+        transition: background-color 1s ease, color 1s ease;
+    }
+    mark.evidenziazione-temporanea.evidenziazione-svanita { background: transparent; color: inherit; }
+
     .nota-campo { font-size: 0.8rem; color: var(--ink-soft); margin: -0.6rem 0 1rem; }
 
     .campi-riga { display: flex; gap: 1rem; }

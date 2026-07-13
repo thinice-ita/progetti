@@ -529,6 +529,36 @@
     .ricerca-globale input[type="search"] { margin-bottom: 0; max-width: 420px; }
     .ricerca-conteggio { font-size: 0.8rem; color: var(--ink-soft); white-space: nowrap; }
 
+    /* Pagina dei risultati di ricerca (ricerca.php) */
+    .ricerca-esito { color: var(--ink-soft); font-size: 0.9rem; margin: 0 0 1.4rem; }
+    .ricerca-lista { display: flex; flex-direction: column; }
+    .ricerca-risultato {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        padding: 0.8rem 0.3rem;
+        border-bottom: 1px solid var(--rule);
+        border-radius: var(--radius-s);
+        transition: background .1s;
+    }
+    .ricerca-risultato:first-child { border-top: 1px solid var(--rule); }
+    .ricerca-risultato:hover { background: var(--accent-soft); }
+    .ricerca-risultato-dove {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--accent);
+        margin-bottom: 0.3rem;
+    }
+    .ricerca-risultato-contesto { font-size: 0.9rem; line-height: 1.55; color: var(--ink); }
+    .ricerca-risultato-contesto mark {
+        background: var(--amber-soft);
+        color: var(--ink);
+        padding: 0 0.15rem;
+        border-radius: 2px;
+    }
+
     .nota-campo { font-size: 0.8rem; color: var(--ink-soft); margin: -0.6rem 0 1rem; }
 
     .campi-riga { display: flex; gap: 1rem; }

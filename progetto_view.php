@@ -96,7 +96,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
     $allegati = $allegatiPerEvento[$idEvento] ?? [];
     $task     = $taskPerEvento[$idEvento] ?? [];
     ?>
-    <details class="evento evento-tipo-<?= h($evento['tipo']) ?>" draggable="true" data-evento-id="<?= $idEvento ?>">
+    <details class="evento evento-tipo-<?= h($evento['tipo']) ?>" id="evento-<?= $idEvento ?>" draggable="true" data-evento-id="<?= $idEvento ?>">
         <summary class="evento-summary">
             <span class="evento-riga">
                 <span><?= $iconeTipo[$evento['tipo']] ?? '' ?></span>
@@ -177,10 +177,10 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
 
     <div class="progetto-testata">
         <h1><?= h($progetto['titolo']) ?></h1>
-        <div class="ricerca-globale">
-            <input type="search" id="ricerca-input" placeholder="🔍 Cerca in questo progetto (eventi, step, task)...">
-            <span id="ricerca-conteggio" class="ricerca-conteggio"></span>
-        </div>
+        <form method="get" action="ricerca.php" class="ricerca-globale">
+            <input type="hidden" name="id" value="<?= $idProgetto ?>">
+            <input type="search" name="q" placeholder="🔍 Cerca in questo progetto (eventi, step, task)...">
+        </form>
     </div>
 
     <?php if ($progetto['descrizione']): ?>
@@ -243,7 +243,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
     <?php endif; ?>
 
     <?php foreach ($stepList as $indice => $step): $idStep = (int) $step['id_step']; $stepChiuso = $step['stato'] === 'completato'; ?>
-        <div class="step-card <?= classeColoreStep($indice) ?><?= $stepChiuso ? ' step-chiuso' : '' ?>"
+        <div class="step-card <?= classeColoreStep($indice) ?><?= $stepChiuso ? ' step-chiuso' : '' ?>" id="step-<?= $idStep ?>"
              data-drop-step="<?= $idStep ?>" data-step-stato="<?= h($step['stato']) ?>" data-step-nome="<?= h($step['nome']) ?>">
             <div class="step-header">
                 <div>
@@ -627,73 +627,20 @@ document.addEventListener('change', function (e) {
         });
 });
 
+/**
+ * Arrivando da un link della pagina di ricerca (#evento-123), apre il
+ * relativo <details> anche nei browser che non lo fanno da soli seguendo
+ * l'ancora, e lo porta a schermo.
+ */
 (function () {
-    var input = document.getElementById('ricerca-input');
-    var conteggio = document.getElementById('ricerca-conteggio');
-    if (!input) {
+    if (!location.hash) {
         return;
     }
-
-    var eventi = Array.prototype.slice.call(document.querySelectorAll('details.evento'));
-    var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
-    var sezioneLiberi = document.querySelector('.sezione-liberi');
-
-    function testoRicercabile(dettaglio) {
-        if (!dettaglio.dataset.ricercaTesto) {
-            dettaglio.dataset.ricercaTesto = dettaglio.textContent.toLowerCase();
-        }
-        return dettaglio.dataset.ricercaTesto;
+    var bersaglio = document.getElementById(location.hash.slice(1));
+    if (bersaglio && bersaglio.tagName === 'DETAILS') {
+        bersaglio.open = true;
+        bersaglio.scrollIntoView({ block: 'center' });
     }
-
-    input.addEventListener('input', function () {
-        var q = input.value.trim().toLowerCase();
-
-        if (q === '') {
-            eventi.forEach(function (ev) { ev.style.display = ''; });
-            stepCards.forEach(function (card) { card.style.display = ''; });
-            if (sezioneLiberi) {
-                sezioneLiberi.style.display = '';
-            }
-            conteggio.textContent = '';
-            return;
-        }
-
-        var trovati = 0;
-
-        eventi.forEach(function (ev) {
-            var match = testoRicercabile(ev).indexOf(q) !== -1;
-            ev.style.display = match ? '' : 'none';
-            if (match) {
-                ev.open = true;
-                trovati++;
-            }
-        });
-
-        stepCards.forEach(function (card) {
-            var nomeMatch = (card.getAttribute('data-step-nome') || '').toLowerCase().indexOf(q) !== -1;
-
-            if (nomeMatch) {
-                card.querySelectorAll('details.evento').forEach(function (ev) { ev.style.display = ''; });
-            }
-
-            var haEventiVisibili = Array.prototype.some.call(
-                card.querySelectorAll('details.evento'),
-                function (ev) { return ev.style.display !== 'none'; }
-            );
-
-            card.style.display = (nomeMatch || haEventiVisibili) ? '' : 'none';
-        });
-
-        if (sezioneLiberi) {
-            var haLiberiVisibili = Array.prototype.some.call(
-                sezioneLiberi.querySelectorAll('details.evento'),
-                function (ev) { return ev.style.display !== 'none'; }
-            );
-            sezioneLiberi.style.display = haLiberiVisibili ? '' : 'none';
-        }
-
-        conteggio.textContent = trovati + (trovati === 1 ? ' risultato' : ' risultati');
-    });
 })();
 </script>
 </body>

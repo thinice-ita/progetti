@@ -258,6 +258,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     var idEvento       = <?= (int) $idEvento ?>;
     var idTemporaneo   = <?= json_encode($idTemporaneo) ?>;
 
+    var campoDataEvento         = document.getElementById('data_evento');
+    var dataEventoModificataAMano = false;
+    if (campoDataEvento) {
+        campoDataEvento.addEventListener('input', function () {
+            dataEventoModificataAMano = true;
+        });
+    }
+
+    var campoTipo         = document.getElementById('tipo');
+    var tipoModificatoAMano = false;
+    if (campoTipo) {
+        campoTipo.addEventListener('change', function () {
+            tipoModificatoAMano = true;
+        });
+    }
+
+    function dueCifre(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function formattaDataEventoLocale(data) {
+        return data.getFullYear() + '-' + dueCifre(data.getMonth() + 1) + '-' + dueCifre(data.getDate()) +
+            'T' + dueCifre(data.getHours()) + ':' + dueCifre(data.getMinutes());
+    }
+
+    /**
+     * Ricava la data/ora da un file appena allegato, per proporla come data
+     * dell'evento (solo su un evento nuovo, non ancora salvato, e solo se l'utente
+     * non ha già toccato il campo a mano): per le email .eml (testo semplice) legge
+     * l'header "Date:"; per tutti gli altri file, compresi i .msg (formato binario
+     * di Outlook, non analizzabile lato client), usa la data di ultima modifica del
+     * file. Resta comunque sempre modificabile a mano dopo la proposta.
+     */
+    function estraiDataEventoDaFile(file) {
+        var estensione = file.name.split('.').pop().toLowerCase();
+
+        if (estensione === 'eml' && typeof file.text === 'function') {
+            return file.text().then(function (testo) {
+                var corrispondenza = testo.match(/^Date:\s*(.+)$/im);
+                if (corrispondenza) {
+                    var timestamp = Date.parse(corrispondenza[1].trim());
+                    if (!isNaN(timestamp)) {
+                        return new Date(timestamp);
+                    }
+                }
+                return new Date(file.lastModified);
+            }).catch(function () {
+                return new Date(file.lastModified);
+            });
+        }
+
+        return Promise.resolve(new Date(file.lastModified));
+    }
+
+    function suggerisciDataEventoDaFile(fileList) {
+        if (idEvento > 0 || dataEventoModificataAMano || !campoDataEvento || !fileList.length) {
+            return;
+        }
+        estraiDataEventoDaFile(fileList[0]).then(function (data) {
+            if (!dataEventoModificataAMano && !isNaN(data.getTime())) {
+                campoDataEvento.value = formattaDataEventoLocale(data);
+            }
+        });
+    }
+
+    /**
+     * Se il primo file allegato è un'email (.eml o .msg), imposta da solo il
+     * "Tipo" evento su "email" — solo su un evento nuovo e solo se l'utente non
+     * ha già scelto il tipo a mano. Resta comunque sempre modificabile.
+     */
+    function suggerisciTipoDaFile(fileList) {
+        if (idEvento > 0 || tipoModificatoAMano || !campoTipo || !fileList.length) {
+            return;
+        }
+        var estensione = fileList[0].name.split('.').pop().toLowerCase();
+        if (estensione === 'eml' || estensione === 'msg') {
+            campoTipo.value = 'email';
+        }
+    }
+
     function aggiungiRigaAllegato(a) {
         var li = document.createElement('li');
         if (idEvento > 0) {
@@ -368,12 +448,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         e.preventDefault();
         dropzone.classList.remove('dropzone-attivo');
         if (e.dataTransfer.files.length) {
-            caricaFile(sanificaFileList(e.dataTransfer.files));
+            var fileList = sanificaFileList(e.dataTransfer.files);
+            suggerisciDataEventoDaFile(fileList);
+            suggerisciTipoDaFile(fileList);
+            caricaFile(fileList);
         }
     });
 
     input.addEventListener('change', function () {
-        caricaFile(sanificaFileList(input.files));
+        var fileList = sanificaFileList(input.files);
+        suggerisciDataEventoDaFile(fileList);
+        suggerisciTipoDaFile(fileList);
+        caricaFile(fileList);
     });
 
     // Rete di sicurezza: se un drop finisse fuori dalla dropzone, evita che il browser

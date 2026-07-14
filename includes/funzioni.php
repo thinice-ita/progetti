@@ -186,15 +186,21 @@ function impostaDataInizioStepSeVuota(PDO $pdo, ?int $idStep): void
 }
 
 /**
- * Applica un cambio di stato a uno step esistente: se lo stato è invariato non fa
- * nulla. Se cambia, registra la transizione in step_storico_stato (uno step può
- * essere chiuso e riaperto più volte: si vuole tenerne traccia completa, non solo
- * l'ultima data) e calcola il valore da salvare in step.data_chiusura:
- *  - passaggio A "completato": la data indicata in $dataChiusuraInput se presente,
- *    altrimenti la data odierna;
- *  - passaggio VIA da "completato" (riapertura): la data indicata in
- *    $dataChiusuraInput se l'utente l'ha valorizzata esplicitamente nel form,
- *    altrimenti NULL (uno step non chiuso non ha una data di chiusura).
+ * Applica un cambio di stato a uno step esistente: se lo stato cambia, registra la
+ * transizione in step_storico_stato (uno step può essere chiuso e riaperto più
+ * volte: si vuole tenerne traccia completa, non solo l'ultima data). Calcola poi il
+ * valore da salvare in step.data_chiusura:
+ *  - stato (nuovo) "completato": la data indicata in $dataChiusuraInput se presente,
+ *    altrimenti la data odierna — vale anche se lo stato era già "completato" prima
+ *    di questo salvataggio, così una data cancellata a mano si ripristina da sola;
+ *  - stato (nuovo) diverso da "completato": la data indicata in $dataChiusuraInput
+ *    se l'utente l'ha valorizzata esplicitamente nel form, altrimenti NULL (uno step
+ *    non chiuso non ha una data di chiusura).
+ *
+ * Nota: chi chiama questa funzione deve aver già forzato $statoNuovo a "completato"
+ * se $dataChiusuraInput è valorizzata (vedi step_form.php) — qui non serve rifarlo,
+ * ma il calcolo della data sopra funziona comunque a prescindere da quale delle due
+ * condizioni ha determinato lo stato "completato".
  *
  * @return string|null Valore da salvare in step.data_chiusura (formato Y-m-d), o null.
  */
@@ -202,12 +208,10 @@ function applicaCambioStatoStep(PDO $pdo, int $idStep, string $statoVecchio, str
 {
     $dataChiusuraInput = $dataChiusuraInput !== null ? trim($dataChiusuraInput) : '';
 
-    if ($statoVecchio === $statoNuovo) {
-        return $dataChiusuraInput !== '' ? $dataChiusuraInput : null;
+    if ($statoVecchio !== $statoNuovo) {
+        $pdo->prepare('INSERT INTO step_storico_stato (fk_step, stato_precedente, stato_nuovo) VALUES (?,?,?)')
+            ->execute([$idStep, $statoVecchio, $statoNuovo]);
     }
-
-    $pdo->prepare('INSERT INTO step_storico_stato (fk_step, stato_precedente, stato_nuovo) VALUES (?,?,?)')
-        ->execute([$idStep, $statoVecchio, $statoNuovo]);
 
     if ($statoNuovo === 'completato') {
         return $dataChiusuraInput !== '' ? $dataChiusuraInput : date('Y-m-d');

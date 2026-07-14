@@ -55,6 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stato = 'da_fare';
     }
 
+    // Valorizzare la data di chiusura implica lo stato "completato", qualunque cosa
+    // fosse selezionata nella tendina (vedi anche applicaCambioStatoStep, che copre
+    // il caso opposto: stato "completato" senza data -> valorizzata alla data odierna).
+    if ($dataChiusura !== '') {
+        $stato = 'completato';
+    }
+
     if ($nome === '') {
         $errore = 'Il nome dello step è obbligatorio.';
     } else {
@@ -141,12 +148,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         <p class="nota-campo">Data inizio: si valorizza da sola al primo evento assegnato allo step.
-        Data chiusura: si valorizza/azzera da sola quando lo stato passa a/da "Completato".
-        Tutte e tre restano comunque modificabili a mano.</p>
+        Data chiusura: si valorizza/azzera da sola quando lo stato passa a/da "Completato", e viceversa
+        valorizzarla a mano imposta anche lo stato "Completato". Tutte e tre restano comunque modificabili a mano.</p>
 
         <button type="submit">Salva</button>
         <a class="btn btn-secondary" href="progetto_view.php?id=<?= $fkProgetto ?>">Annulla</a>
     </form>
 </div>
+<script>
+(function () {
+    var campoStato          = document.getElementById('stato');
+    var campoDataChiusura    = document.getElementById('data_chiusura');
+
+    function oggiIso() {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // Valorizzare la data di chiusura imposta subito anche lo stato "Completato"
+    // (stessa logica applicata lato server al salvataggio, vedi step_form.php).
+    campoDataChiusura.addEventListener('input', function () {
+        if (campoDataChiusura.value !== '') {
+            campoStato.value = 'completato';
+        }
+    });
+
+    // Selezionare "Completato" senza una data di chiusura propone subito la data
+    // odierna (resta comunque modificabile prima di salvare).
+    campoStato.addEventListener('change', function () {
+        if (campoStato.value === 'completato' && campoDataChiusura.value === '') {
+            campoDataChiusura.value = oggiIso();
+        }
+    });
+})();
+</script>
 </body>
 </html>

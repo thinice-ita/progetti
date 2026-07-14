@@ -594,45 +594,76 @@
     .lt-legenda-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; border: 1px dashed var(--ink-faint); display: inline-block; }
     .lt-legenda-linea { width: 1.1rem; height: 0; border-top: 1px dashed var(--ink-faint); display: inline-block; }
 
-    .linea-tempo-scroll { overflow-x: auto; padding-bottom: 0.5rem; }
-    .lt-pista { position: relative; height: 27rem; min-width: 920px; }
+    .lt-zoom { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1rem; font-size: 0.78rem; color: var(--ink-soft); }
+    .lt-zoom a {
+        padding: 0.15rem 0.55rem;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-s);
+        color: var(--ink-soft);
+        text-decoration: none;
+    }
+    .lt-zoom a:hover { background: var(--accent-soft); }
+    .lt-zoom a.lt-zoom-attivo { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 
-    .lt-asse { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--ink); transform: translateY(-1px); }
+    .linea-tempo-scroll { overflow-x: auto; padding-bottom: 0.5rem; cursor: grab; }
+    .linea-tempo-scroll.lt-trascinando { cursor: grabbing; user-select: none; }
+    .lt-pista { position: relative; min-width: 920px; }
 
-    .lt-oggi { position: absolute; top: 1.5rem; bottom: 2.6rem; border-left: 1px dashed var(--ink-faint); transform: translateX(-50%); }
+    /* top scostato abbastanza da lasciare spazio all'etichetta "OGGI" sopra la
+       riga (quella ha un top negativo relativo a QUESTO elemento): altrimenti
+       l'etichetta finisce sopra il bordo della pista e viene tagliata dallo
+       scorrimento orizzontale (bug segnalato: scritta "Oggi" non visibile). */
+    .lt-oggi { position: absolute; top: 26px; border-left: 1px dashed var(--ink-faint); }
     .lt-oggi-etichetta {
-        position: absolute; top: -1.3rem; left: 50%; transform: translateX(-50%);
+        position: absolute; top: -1rem; left: 50%; transform: translateX(-50%);
         font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
         color: var(--ink-faint); white-space: nowrap;
     }
 
     .lt-marker { position: absolute; z-index: 1; }
-    .lt-marker.lt-aperta { z-index: 40; }
-
-    /* --lt-livello: assegnata via JS quando un marker si accavalla con un altro
-       nella stessa corsia (es. due step aperti lo stesso giorno) — lo allontana
-       dalla linea invece di sovrapporlo, con lo stelo che si allunga di pari passo. */
-    .lt-sopra { bottom: 50%; margin-bottom: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); transform: translateX(-50%); }
-    .lt-sotto { top: 50%; margin-top: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); transform: translateX(-50%); }
-    .lt-sopra::after, .lt-sotto::after { content: ''; position: absolute; left: 50%; width: 1px; background: var(--rule); }
-    .lt-sopra::after { bottom: calc(-1 * (0.4rem + var(--lt-livello, 0) * 2.4rem)); height: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); }
-    .lt-sotto::after { top: calc(-1 * (0.4rem + var(--lt-livello, 0) * 2.4rem)); height: calc(0.4rem + var(--lt-livello, 0) * 2.4rem); }
+    /* Molto alto e ripetuto anche sul fumetto stesso: deve vincere su qualunque
+       altro marker/corsia sotto, indipendentemente da quanti se ne accavallano
+       (bug segnalato: il fumetto finiva dietro a una barra successiva). */
+    .lt-marker.lt-aperta { z-index: 500; }
+    .lt-marker.lt-aperta .lt-callout { z-index: 500; }
 
     .lt-marker-toggle { border: none; cursor: pointer; font: inherit; display: block; }
 
-    .lt-tab {
-        padding: 0.3rem 0.6rem;
+    /* Barra "Gantt" di uno step: una corsia fissa a testa (altezza LT_ALTEZZA_CORSIA
+       lato PHP, 34px, va tenuta allineata a mano se si cambia una delle due). */
+    .lt-marker-barra { height: 24px; }
+    .lt-barra {
+        width: 100%; height: 100%;
+        box-sizing: border-box;
+        display: flex; align-items: center;
+        padding: 0 0.6rem;
         border: 1px solid var(--rule);
         border-radius: var(--radius-s);
         font-size: 0.72rem;
         font-weight: 600;
         color: var(--ink);
-        white-space: nowrap;
-        max-width: 9.5rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
         box-shadow: var(--shadow-card);
     }
+    /* position:sticky (non relative allo scroll della pagina, ma al contenitore
+       che scorre lateralmente, .linea-tempo-scroll): su una barra molto lunga il
+       nome resta agganciato al bordo visibile invece di restare fermo al suo
+       inizio, che potrebbe finire fuori vista scorrendo. Resta comunque dentro i
+       confini della barra stessa. */
+    .lt-barra-nome {
+        position: sticky; left: 0.6rem; right: 0.6rem;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* Step ancora "in corso" (nessuna data di chiusura): la barra piena arriva solo
+       fino all'ultimo evento interno, seguita da questo breve tratteggio che segnala
+       "prosegue, durata non ancora determinata" invece di arrivare fino a oggi. */
+    .lt-barra-tratteggio {
+        position: absolute; left: 100%; top: 0; height: 100%; width: 26px;
+        box-sizing: border-box;
+        border: 1px dashed var(--ink-faint);
+        border-left: none;
+        border-radius: 0 var(--radius-s) var(--radius-s) 0;
+    }
+
     .lt-tab-colore-0 { background: var(--step0-bg); border-color: var(--step0-rule); }
     .lt-tab-colore-1 { background: var(--step1-bg); border-color: var(--step1-rule); }
     .lt-tab-colore-2 { background: var(--step2-bg); border-color: var(--step2-rule); }
@@ -648,19 +679,34 @@
         display: flex; align-items: center; justify-content: center;
         font-size: 0.62rem; font-weight: 700; color: var(--ink-soft);
     }
+    /* Corsia unica degli eventi liberi, sotto il blocco delle barre step;
+       --lt-livello (assegnata via JS quando due si accavallano ancora dopo il
+       raggruppamento in "+N") li impila invece di sovrapporli. 18px = LT_ALTEZZA_LIVELLO
+       lato PHP. Niente transform qui (a differenza delle versioni precedenti): un
+       transform su un antenato del fumetto (.lt-callout, position:fixed) gli
+       creerebbe un containing block diverso dalla finestra, vanificandone il
+       posizionamento — il centraggio orizzontale è già dentro il "left" calcolato
+       lato PHP (posizioneCentrataCss). */
+    .lt-marker-libero {
+        top: calc(var(--lt-corsia-top) + var(--lt-livello, 0) * 18px);
+    }
 
+    /* position:fixed anziché absolute: il fumetto esce così dal contenitore che
+       scorre e si posiziona rispetto alla finestra (coordinate calcolate in JS da
+       posizionaCallout). Risolve sia il taglio ai bordi della pista sia il fatto
+       che la scrollbar nativa del contenitore si disegna comunque sopra il suo
+       contenuto, indipendentemente da qualunque z-index (bug segnalati). */
     .lt-callout {
         display: none;
-        position: absolute; left: 50%; transform: translateX(-50%);
+        position: fixed;
         width: 15.5rem; max-height: 9.5rem; overflow-y: auto;
         background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-m);
         box-shadow: 0 6px 16px -6px rgba(43,42,36,.25);
         padding: 0.5rem;
         text-align: left;
+        z-index: 500;
     }
     .lt-aperta .lt-callout { display: block; }
-    .lt-sopra .lt-callout { bottom: 100%; margin-bottom: 0.6rem; }
-    .lt-sotto .lt-callout { top: 100%; margin-top: 0.6rem; }
 
     .lt-callout-titolo {
         font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
@@ -697,5 +743,48 @@
         font-size: 0.82rem;
         color: var(--ink-soft);
         line-height: 1.6;
+    }
+
+    .lt-stampa-btn {
+        font-family: inherit;
+        background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+        padding: 0.15rem 0.6rem; border-radius: var(--radius-s);
+        font-size: 0.78rem; font-weight: 700; cursor: pointer; margin-left: auto;
+    }
+    .lt-stampa-btn:hover { background: #e2e8f0; }
+
+    /* Lista step per la stampa (colonna sinistra, 1/4 pagina): a schermo la stessa
+       informazione è già nei fumetti, quindi resta nascosta e compare solo in stampa. */
+    .lt-stampa-step-lista { display: none; }
+    .lt-stampa-step-lista-titolo { font-size: 0.9rem; margin: 0 0 0.6rem; }
+    .lt-stampa-step-riga { padding: 0.4rem 0; border-bottom: 1px solid var(--rule); font-size: 0.78rem; }
+    .lt-stampa-step-nome { display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.15rem; }
+    .lt-stampa-step-swatch { width: 0.8rem; height: 0.8rem; border-radius: 2px; border: 1px solid var(--rule); flex-shrink: 0; }
+    .lt-stampa-step-date { color: var(--ink-soft); }
+    .lt-stampa-step-stato { font-style: italic; color: var(--ink-faint); }
+
+    @media print {
+        .lt-no-stampa, .lt-freccia { display: none !important; }
+
+        @page { size: A3 landscape; margin: 10mm; }
+
+        /* Sfondo bianco puro: con "Stampa sfondi" attivo (necessario per vedere
+           i colori delle barre step) il crema/giallino della pagina normale si
+           mischiava con quelli, rendendo tutto confuso. */
+        body, .contenitore { background: #fff; }
+        .contenitore { max-width: none; padding: 0; border: none; box-shadow: none; }
+        a.link-indietro { text-decoration: none; color: var(--ink); font-size: 1.15rem; font-weight: 700; }
+
+        /* Colonna sinistra 1/4 (lista step) + colonna destra 3/4 (linea del tempo),
+           quest'ultima non più scorrevole ma allargata a riempire la sua colonna:
+           posizioni/larghezze restano corrette perché già calcolate in percentuale. */
+        .lt-stampa-layout { display: flex; align-items: flex-start; gap: 1rem; }
+        .lt-stampa-step-lista {
+            display: block; width: 25%; flex: 0 0 25%; box-sizing: border-box;
+            padding-right: 0.6rem; border-right: 1px solid var(--rule);
+        }
+        .linea-tempo-scroll { width: 75%; flex: 0 0 75%; overflow: visible; }
+        .lt-pista, .lt-mesi { min-width: 0 !important; width: 100% !important; }
+        .lt-callout { display: none !important; }
     }
 </style>

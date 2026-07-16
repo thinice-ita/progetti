@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "🔔 Ultimo push fatto da: $(git log -1 --format='%an')"
+echo "📝 Messaggio: $(git log -1 --format='%s')"

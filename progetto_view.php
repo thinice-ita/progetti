@@ -140,8 +140,9 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 <?php if ($partecipanti): ?>
                     <button type="button" class="badge-partecipanti btn-partecipanti" data-scope="evento" data-id="<?= $idEvento ?>"
                         title="<?= h(implode(', ', array_map('formattaNomePartecipante', $partecipanti))) ?>">👤 <?= count($partecipanti) ?></button>
+                <?php else: ?>
+                    <button type="button" class="icona-azione btn-partecipanti" data-scope="evento" data-id="<?= $idEvento ?>" title="Partecipanti evento">👤</button>
                 <?php endif; ?>
-                <button type="button" class="icona-azione btn-partecipanti" data-scope="evento" data-id="<?= $idEvento ?>" title="Partecipanti evento">👤</button>
                 <a href="evento_form.php?id=<?= $idEvento ?>" class="icona-azione" title="Modifica">✏️</a>
                 <a href="evento_delete.php?id=<?= $idEvento ?>" class="icona-azione icona-azione-elimina" title="Elimina"
                    onclick="return confirm('Eliminare questo evento?');">🗑️</a>
@@ -289,8 +290,9 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                     <?php if ($partecipantiStep): ?>
                         <button type="button" class="badge-partecipanti btn-partecipanti" data-scope="step" data-id="<?= $idStep ?>"
                             title="<?= h(implode(', ', array_map('formattaNomePartecipante', $partecipantiStep))) ?>">👤 <?= count($partecipantiStep) ?></button>
+                    <?php else: ?>
+                        <button type="button" class="icona-azione btn-partecipanti" data-scope="step" data-id="<?= $idStep ?>" title="Partecipanti allo step">👤</button>
                     <?php endif; ?>
-                    <button type="button" class="icona-azione btn-partecipanti" data-scope="step" data-id="<?= $idStep ?>" title="Partecipanti allo step">👤</button>
                     <a class="icona-azione" href="step_form.php?id=<?= $idStep ?>" title="Modifica step">✏️</a>
                     <a class="icona-azione icona-azione-elimina" href="step_delete.php?id=<?= $idStep ?>" title="Elimina step"
                        onclick="return confirm('Eliminare questo step? Gli eventi collegati restano nel progetto e tornano liberi.');">🗑️</a>

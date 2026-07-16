@@ -69,6 +69,9 @@
     }
     h2 { font-size: 1.15rem; margin-top: 1.75rem; }
 
+    .step-sezione-intestazione { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.75rem; }
+    .step-sezione-intestazione h2 { margin: 0; }
+
     /* Testata di pagina: titolo del progetto e ricerca sulla stessa riga,
        ricerca allineata a destra. Il filetto "da letterhead" si sposta
        dall'h1 all'intera riga così la linea corre sotto entrambi. */
@@ -224,6 +227,12 @@
     .step-card.step-chiuso { background: var(--neutral-soft) !important; border-color: var(--rule) !important; opacity: 0.72; }
     .step-card.step-chiuso:hover { opacity: 0.95; }
     .step-card.step-chiuso .step-header strong { color: var(--ink-soft); }
+
+    /* Flash temporaneo sullo step appena spostato su/giù con le frecce: un
+       contorno che si dissolve dopo qualche secondo, senza toccare il colore di
+       sfondo dello step (che identifica lo step stesso, va lasciato leggibile). */
+    .step-evidenziato { outline: 3px solid var(--accent); outline-offset: 3px; transition: outline-color 1s ease; }
+    .step-evidenziato.step-evidenziato-svanito { outline-color: transparent; }
 
     /* Tavolozza tenue, ispirata alle etichette di cartelle di un archivio, per
        distinguere visivamente gli step tra loro (assegnata ciclicamente) */

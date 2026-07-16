@@ -325,7 +325,13 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
         <?php endforeach; ?>
     </div>
 
-    <h2>Step</h2>
+    <div class="step-sezione-intestazione">
+        <h2>Step</h2>
+        <?php if (count($stepList) > 1): ?>
+            <a class="btn-stampa" href="step_ripristina_ordine.php?id=<?= $idProgetto ?>"
+               onclick="return confirm('Ripristinare l\'ordine degli step a quello di creazione?\n\nLe posizioni spostate con le frecce andranno perse.');">↺ Ripristina ordinamento step</a>
+        <?php endif; ?>
+    </div>
 
     <?php if (!$stepList): ?>
         <p>Nessuno step presente. Creane uno per organizzare gli eventi, oppure lasciali liberi.</p>
@@ -978,6 +984,17 @@ function evidenziaTesto(radice, query) {
         bersaglio.open = true;
     }
     bersaglio.scrollIntoView({ block: 'center' });
+
+    // Step appena spostato su/giù con le frecce: flash di 3 secondi, poi dissolvenza.
+    if (new URLSearchParams(location.search).get('evidenzia') === '1' && bersaglio.classList.contains('step-card')) {
+        bersaglio.classList.add('step-evidenziato');
+        setTimeout(function () {
+            bersaglio.classList.add('step-evidenziato-svanito');
+            setTimeout(function () {
+                bersaglio.classList.remove('step-evidenziato', 'step-evidenziato-svanito');
+            }, 1000);
+        }, 3000);
+    }
 
     var query = new URLSearchParams(location.search).get('q');
     if (!query) {

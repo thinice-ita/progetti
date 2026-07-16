@@ -41,4 +41,4 @@ if ($indice !== null && $indiceVicino >= 0 && $indiceVicino < count($stepOrdinat
     $pdo->prepare('UPDATE step SET ordine = ? WHERE id_step = ?')->execute([$stepOrdinati[$indice]['ordine'], $vicino['id_step']]);
 }
 
-redirect('progetto_view.php?id=' . $fkProgetto . '#step-' . $idStep);
+redirect('progetto_view.php?id=' . $fkProgetto . '&evidenzia=1#step-' . $idStep);

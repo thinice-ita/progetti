@@ -22,14 +22,7 @@ $stmt = $pdo->prepare('SELECT * FROM step WHERE fk_progetto = ? ORDER BY ordine,
 $stmt->execute([$idProgetto]);
 $stepList = $stmt->fetchAll();
 
-// Ordinamento eventi: per data dell'evento o per data di caricamento, crescente o decrescente.
-// I valori sono validati contro una lista fissa, quindi possono essere interpolati nell'ORDER BY in sicurezza.
-$ordinaPer = in_array($_GET['ordina_per'] ?? '', ['data_evento', 'creato_il'], true) ? $_GET['ordina_per'] : 'data_evento';
-$direzione = ($_GET['direzione'] ?? '') === 'asc' ? 'ASC' : 'DESC';
-
-$stmt = $pdo->prepare(
-    "SELECT * FROM eventi WHERE fk_progetto = ? ORDER BY $ordinaPer $direzione, id_evento $direzione"
-);
+$stmt = $pdo->prepare('SELECT * FROM eventi WHERE fk_progetto = ? ORDER BY id_evento');
 $stmt->execute([$idProgetto]);
 $tuttiEventi = $stmt->fetchAll();
 
@@ -42,6 +35,68 @@ foreach ($tuttiEventi as $evento) {
     } else {
         $eventiPerStep[(int) $evento['fk_step']][] = $evento;
     }
+}
+
+/**
+ * Ordinamento eventi indipendente per sezione (eventi liberi, o un singolo step):
+ * ogni sezione ha il proprio campo/direzione nella query string (validati contro
+ * una lista fissa), così cambiare l'ordinamento di una sezione non tocca le altre.
+ */
+function chiaviOrdinamento(string $sezione): array
+{
+    return ['ordina_' . $sezione, 'dir_' . $sezione];
+}
+
+function leggiOrdinamento(string $sezione): array
+{
+    [$chiaveCampo, $chiaveDir] = chiaviOrdinamento($sezione);
+    $campo     = in_array($_GET[$chiaveCampo] ?? '', ['data_evento', 'creato_il'], true) ? $_GET[$chiaveCampo] : 'data_evento';
+    $direzione = ($_GET[$chiaveDir] ?? '') === 'asc' ? 'ASC' : 'DESC';
+    return [$campo, $direzione];
+}
+
+function ordinaEventi(array $eventi, string $campo, string $direzione): array
+{
+    usort($eventi, function (array $a, array $b) use ($campo, $direzione): int {
+        $cmp = $a[$campo] <=> $b[$campo];
+        if ($cmp === 0) {
+            $cmp = $a['id_evento'] <=> $b['id_evento'];
+        }
+        return $direzione === 'ASC' ? $cmp : -$cmp;
+    });
+    return $eventi;
+}
+
+/**
+ * Campi nascosti con l'ordinamento attuale di tutte le sezioni tranne quella
+ * corrente: ogni mini-form di ordinamento (una per sezione) li riporta così,
+ * inviandola, non azzera l'ordinamento scelto per le altre sezioni.
+ */
+function campiNascostiOrdinamento(array $ordinamentoPerSezione, string $sezioneCorrente): void
+{
+    foreach ($ordinamentoPerSezione as $sezione => $valori) {
+        if ($sezione === $sezioneCorrente) {
+            continue;
+        }
+        [$campo, $direzione]         = $valori;
+        [$chiaveCampo, $chiaveDir] = chiaviOrdinamento($sezione);
+        echo '<input type="hidden" name="' . h($chiaveCampo) . '" value="' . h($campo) . '">';
+        echo '<input type="hidden" name="' . h($chiaveDir) . '" value="' . h(strtolower($direzione)) . '">';
+    }
+}
+
+$ordinamentoPerSezione = ['liberi' => leggiOrdinamento('liberi')];
+foreach ($stepList as $step) {
+    $ordinamentoPerSezione['step' . (int) $step['id_step']] = leggiOrdinamento('step' . (int) $step['id_step']);
+}
+
+[$campoLiberi, $direzioneLiberi] = $ordinamentoPerSezione['liberi'];
+$eventiLiberi = ordinaEventi($eventiLiberi, $campoLiberi, $direzioneLiberi);
+
+foreach ($stepList as $step) {
+    $idStepOrdinamento = (int) $step['id_step'];
+    [$campo, $direzione] = $ordinamentoPerSezione['step' . $idStepOrdinamento];
+    $eventiPerStep[$idStepOrdinamento] = ordinaEventi($eventiPerStep[$idStepOrdinamento] ?? [], $campo, $direzione);
 }
 
 $allegatiPerEvento = [];
@@ -244,26 +299,25 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
            title="Report completo del progetto, esplorabile e stampabile">📋 Report progetto</a>
     </div>
 
-    <?php if ($tuttiEventi): ?>
-        <form method="get" class="ordina-form">
-            <input type="hidden" name="id" value="<?= $idProgetto ?>">
-            <span>Ordina eventi per
-                <select name="ordina_per" onchange="this.form.submit()">
-                    <option value="data_evento" <?= $ordinaPer === 'data_evento' ? 'selected' : '' ?>>Data evento</option>
-                    <option value="creato_il" <?= $ordinaPer === 'creato_il' ? 'selected' : '' ?>>Data caricamento</option>
-                </select>
-            </span>
-            <select name="direzione" onchange="this.form.submit()">
-                <option value="desc" <?= $direzione === 'DESC' ? 'selected' : '' ?>>Decrescente (più recenti prima)</option>
-                <option value="asc" <?= $direzione === 'ASC' ? 'selected' : '' ?>>Crescente (più vecchi prima)</option>
-            </select>
-        </form>
-    <?php endif; ?>
-
     <h2>Eventi liberi</h2>
     <div class="sezione-liberi" data-drop-step="">
         <div class="sezione-liberi-titolo">Non assegnati a nessuno step &mdash; trascina qui per rimuovere l'assegnazione</div>
-        <?php if (!$eventiLiberi): ?>
+        <?php if ($eventiLiberi): ?>
+            <form method="get" class="ordina-form">
+                <input type="hidden" name="id" value="<?= $idProgetto ?>">
+                <?php campiNascostiOrdinamento($ordinamentoPerSezione, 'liberi'); ?>
+                <span>Ordina per
+                    <select name="ordina_liberi" onchange="this.form.submit()">
+                        <option value="data_evento" <?= $campoLiberi === 'data_evento' ? 'selected' : '' ?>>Data evento</option>
+                        <option value="creato_il" <?= $campoLiberi === 'creato_il' ? 'selected' : '' ?>>Data caricamento</option>
+                    </select>
+                </span>
+                <select name="dir_liberi" onchange="this.form.submit()">
+                    <option value="desc" <?= $direzioneLiberi === 'DESC' ? 'selected' : '' ?>>Decrescente (più recenti prima)</option>
+                    <option value="asc" <?= $direzioneLiberi === 'ASC' ? 'selected' : '' ?>>Crescente (più vecchi prima)</option>
+                </select>
+            </form>
+        <?php else: ?>
             <p><em>Nessun evento libero.</em></p>
         <?php endif; ?>
         <?php foreach ($eventiLiberi as $evento): ?>
@@ -286,6 +340,12 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                     <span class="badge badge-<?= h($step['stato']) ?>"><?= h($etichetteStato[$step['stato']] ?? $step['stato']) ?></span>
                 </div>
                 <div class="azioni azioni-icone">
+                    <?php if ($indice > 0): ?>
+                        <a class="icona-azione" href="step_sposta.php?id=<?= $idStep ?>&direzione=su" title="Sposta su">⬆️</a>
+                    <?php endif; ?>
+                    <?php if ($indice < count($stepList) - 1): ?>
+                        <a class="icona-azione" href="step_sposta.php?id=<?= $idStep ?>&direzione=giu" title="Sposta giù">⬇️</a>
+                    <?php endif; ?>
                     <?php $partecipantiStep = $partecipantiPerStep[$idStep] ?? []; ?>
                     <?php if ($partecipantiStep): ?>
                         <button type="button" class="badge-partecipanti btn-partecipanti" data-scope="step" data-id="<?= $idStep ?>"
@@ -322,8 +382,24 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
             <?php endif; ?>
 
             <?php $eventi = $eventiPerStep[$idStep] ?? []; ?>
+            <?php $sezioneStep = 'step' . $idStep; [$campoStep, $direzioneStep] = $ordinamentoPerSezione[$sezioneStep]; ?>
 
-            <?php if (!$eventi): ?>
+            <?php if ($eventi): ?>
+                <form method="get" class="ordina-form">
+                    <input type="hidden" name="id" value="<?= $idProgetto ?>">
+                    <?php campiNascostiOrdinamento($ordinamentoPerSezione, $sezioneStep); ?>
+                    <span>Ordina per
+                        <select name="ordina_<?= $sezioneStep ?>" onchange="this.form.submit()">
+                            <option value="data_evento" <?= $campoStep === 'data_evento' ? 'selected' : '' ?>>Data evento</option>
+                            <option value="creato_il" <?= $campoStep === 'creato_il' ? 'selected' : '' ?>>Data caricamento</option>
+                        </select>
+                    </span>
+                    <select name="dir_<?= $sezioneStep ?>" onchange="this.form.submit()">
+                        <option value="desc" <?= $direzioneStep === 'DESC' ? 'selected' : '' ?>>Decrescente (più recenti prima)</option>
+                        <option value="asc" <?= $direzioneStep === 'ASC' ? 'selected' : '' ?>>Crescente (più vecchi prima)</option>
+                    </select>
+                </form>
+            <?php else: ?>
                 <p><em>Nessun evento in questo step. Trascina qui un evento libero.</em></p>
             <?php endif; ?>
 

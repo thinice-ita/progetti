@@ -385,8 +385,26 @@
         border-radius: var(--radius-s);
         opacity: 0.7;
         flex-shrink: 0;
+        /* Reset per poter usare la stessa classe anche su <button> (azioni via JS,
+           non solo link), oltre che su <a>: senza questo erediterebbe lo stile
+           pieno "button, a.btn" definito sopra. */
+        border: none;
+        background: transparent;
+        padding: 0;
+        color: var(--ink);
+        font-family: inherit;
+        cursor: pointer;
     }
     .icona-azione:hover { opacity: 1; background: rgba(43,42,36,0.08); }
+
+    /* Pillola conteggio partecipanti: come .badge-task/.badge-allegati ma cliccabile
+       (apre la modale con l'elenco), quindi resettata da <span> a <button>. */
+    button.badge-partecipanti {
+        border: none;
+        font-family: inherit;
+        cursor: pointer;
+    }
+    button.badge-partecipanti:hover { background: var(--accent-soft); color: var(--accent); }
 
     /* Zona stampe: raggruppa le azioni di stampa separandole da modifica/elimina,
        cosi non si confondono con le azioni di gestione dello step/evento. Dentro
@@ -584,6 +602,65 @@
     .campi-riga { display: flex; gap: 1rem; }
     .campi-riga > div { flex: 1 1 0; min-width: 0; }
     .campi-riga label { font-size: 0.85rem; }
+
+    /* Selezione partecipanti (progetto_partecipanti.php, step_partecipanti.php,
+       evento_partecipanti.php): stessa lista con checkbox, riusata identica sui tre
+       livelli di scope. */
+    .lista-partecipanti-selezione { border: 1px solid var(--rule); border-radius: var(--radius-s); margin-bottom: 1rem; max-height: 60vh; overflow-y: auto; }
+    .partecipante-riga {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.7rem;
+        border-bottom: 1px solid var(--rule);
+        font-weight: normal;
+        cursor: pointer;
+    }
+    .partecipante-riga:last-child { border-bottom: none; }
+    .partecipante-riga:hover { background: var(--accent-soft); }
+    .partecipante-riga input[type="checkbox"] { flex-shrink: 0; width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--accent); margin: 0; }
+    .partecipante-nome { font-weight: 600; flex-shrink: 0; }
+    .partecipante-contatti { font-size: 0.8rem; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .badge-partecipanti {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.15rem 0.5rem;
+        border-radius: var(--radius-s);
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: var(--neutral-soft);
+        color: var(--ink-soft);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .step-partecipanti { font-size: 0.78rem; color: var(--ink-soft); margin: -0.3rem 0 0.6rem; }
+
+    /* Modale di selezione partecipanti (step/evento): <dialog> nativo, così resta
+       sopra la pagina sottostante senza navigarci via (Esc/click sul fondo per
+       chiuderla arrivano gratis dal browser). */
+    dialog.modal-partecipanti {
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-l);
+        padding: 1.4rem;
+        width: min(420px, 90vw);
+        margin: auto;
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: 0 16px 40px -10px rgba(43,42,36,.4);
+    }
+    dialog.modal-partecipanti::backdrop { background: rgba(43,42,36,.45); }
+    .modal-partecipanti-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem; }
+    .modal-partecipanti-header h2 { margin: 0; font-size: 1.05rem; border-bottom: none; padding-bottom: 0; }
+    .modal-chiudi {
+        border: none; background: transparent; font-size: 1.4rem; line-height: 1;
+        cursor: pointer; color: var(--ink-faint); padding: 0 0.2rem; font-family: inherit;
+    }
+    .modal-chiudi:hover { color: var(--ink); }
+    .modal-partecipanti-cerca { margin-bottom: 0.8rem; }
+    .modal-partecipanti-lista { max-height: 50vh; }
+    .modal-partecipanti-azioni { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+    .modal-partecipanti-riga-nascosta { display: none !important; }
 
     /* ===== Linea del tempo (linea-tempo.php) ===== */
     .lt-sottotitolo { font-size: 0.82rem; color: var(--ink-soft); margin: 0 0 1rem; }

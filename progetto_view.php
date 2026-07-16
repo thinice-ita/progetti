@@ -69,6 +69,46 @@ if ($tuttiEventi) {
     }
 }
 
+$stmt = $pdo->prepare(
+    'SELECT p.* FROM partecipanti p
+     JOIN progetto_partecipanti pp ON pp.fk_partecipante = p.id_partecipante
+     WHERE pp.fk_progetto = ? ORDER BY p.cognome, p.nome'
+);
+$stmt->execute([$idProgetto]);
+$partecipantiProgetto = $stmt->fetchAll();
+
+$partecipantiPerStep   = [];
+$partecipantiPerEvento = [];
+
+if ($stepList) {
+    $idStepList = array_column($stepList, 'id_step');
+    $segnapostoStep = implode(',', array_fill(0, count($idStepList), '?'));
+
+    $stmt = $pdo->prepare(
+        "SELECT sp.fk_step, p.* FROM step_partecipanti sp
+         JOIN partecipanti p ON p.id_partecipante = sp.fk_partecipante
+         WHERE sp.fk_step IN ($segnapostoStep) ORDER BY p.cognome, p.nome"
+    );
+    $stmt->execute($idStepList);
+
+    foreach ($stmt->fetchAll() as $riga) {
+        $partecipantiPerStep[(int) $riga['fk_step']][] = $riga;
+    }
+}
+
+if ($tuttiEventi) {
+    $stmt = $pdo->prepare(
+        "SELECT ep.fk_evento, p.* FROM eventi_partecipanti ep
+         JOIN partecipanti p ON p.id_partecipante = ep.fk_partecipante
+         WHERE ep.fk_evento IN ($segnaposto) ORDER BY p.cognome, p.nome"
+    );
+    $stmt->execute($idEventiList);
+
+    foreach ($stmt->fetchAll() as $riga) {
+        $partecipantiPerEvento[(int) $riga['fk_evento']][] = $riga;
+    }
+}
+
 $etichetteStato = ['da_fare' => 'Da fare', 'in_corso' => 'In corso', 'completato' => 'Completato'];
 $iconeTipo      = ['nota' => '📝', 'riunione' => '👥', 'email' => '✉️', 'registrazione' => '🎙️'];
 
@@ -76,11 +116,12 @@ $iconeTipo      = ['nota' => '📝', 'riunione' => '👥', 'email' => '✉️', 
  * Stampa un evento come blocco <details> compatto ed espandibile, trascinabile
  * verso un'altra zona (step o "eventi liberi").
  */
-function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEvento, array $iconeTipo): void
+function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEvento, array $iconeTipo, array $partecipantiPerEvento): void
 {
     $idEvento = (int) $evento['id_evento'];
     $allegati = $allegatiPerEvento[$idEvento] ?? [];
     $task     = $taskPerEvento[$idEvento] ?? [];
+    $partecipanti = $partecipantiPerEvento[$idEvento] ?? [];
     ?>
     <details class="evento evento-tipo-<?= h($evento['tipo']) ?>" id="evento-<?= $idEvento ?>" draggable="true" data-evento-id="<?= $idEvento ?>">
         <summary class="evento-summary">
@@ -96,6 +137,11 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 <?php if ($task): ?>
                     <span class="badge-task"><?= h(etichettaPillolaTask($task)) ?></span>
                 <?php endif; ?>
+                <?php if ($partecipanti): ?>
+                    <button type="button" class="badge-partecipanti btn-partecipanti" data-scope="evento" data-id="<?= $idEvento ?>"
+                        title="<?= h(implode(', ', array_map('formattaNomePartecipante', $partecipanti))) ?>">👤 <?= count($partecipanti) ?></button>
+                <?php endif; ?>
+                <button type="button" class="icona-azione btn-partecipanti" data-scope="evento" data-id="<?= $idEvento ?>" title="Partecipanti evento">👤</button>
                 <a href="evento_form.php?id=<?= $idEvento ?>" class="icona-azione" title="Modifica">✏️</a>
                 <a href="evento_delete.php?id=<?= $idEvento ?>" class="icona-azione icona-azione-elimina" title="Elimina"
                    onclick="return confirm('Eliminare questo evento?');">🗑️</a>
@@ -181,6 +227,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
     <div class="azioni">
         <a class="btn btn-secondary" href="progetto_form.php?id=<?= $idProgetto ?>">Modifica progetto</a>
         <a class="btn btn-secondary" href="linea-tempo.php?id=<?= $idProgetto ?>">🕰️ Linea del tempo</a>
+        <a class="btn btn-secondary" href="progetto_partecipanti.php?id=<?= $idProgetto ?>">👤 Partecipanti<?= $partecipantiProgetto ? ' (' . count($partecipantiProgetto) . ')' : '' ?></a>
         <a class="btn" href="step_form.php?fk_progetto=<?= $idProgetto ?>">+ Nuovo step</a>
         <a class="btn" href="evento_form.php?fk_progetto=<?= $idProgetto ?>">+ Evento libero</a>
         <a class="btn" href="registrazione_form.php?fk_progetto=<?= $idProgetto ?>">🎙️ Registrazione libera</a>
@@ -219,7 +266,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
             <p><em>Nessun evento libero.</em></p>
         <?php endif; ?>
         <?php foreach ($eventiLiberi as $evento): ?>
-            <?php stampaEvento($evento, $allegatiPerEvento, $taskPerEvento, $iconeTipo); ?>
+            <?php stampaEvento($evento, $allegatiPerEvento, $taskPerEvento, $iconeTipo, $partecipantiPerEvento); ?>
         <?php endforeach; ?>
     </div>
 
@@ -238,6 +285,12 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                     <span class="badge badge-<?= h($step['stato']) ?>"><?= h($etichetteStato[$step['stato']] ?? $step['stato']) ?></span>
                 </div>
                 <div class="azioni azioni-icone">
+                    <?php $partecipantiStep = $partecipantiPerStep[$idStep] ?? []; ?>
+                    <?php if ($partecipantiStep): ?>
+                        <button type="button" class="badge-partecipanti btn-partecipanti" data-scope="step" data-id="<?= $idStep ?>"
+                            title="<?= h(implode(', ', array_map('formattaNomePartecipante', $partecipantiStep))) ?>">👤 <?= count($partecipantiStep) ?></button>
+                    <?php endif; ?>
+                    <button type="button" class="icona-azione btn-partecipanti" data-scope="step" data-id="<?= $idStep ?>" title="Partecipanti allo step">👤</button>
                     <a class="icona-azione" href="step_form.php?id=<?= $idStep ?>" title="Modifica step">✏️</a>
                     <a class="icona-azione icona-azione-elimina" href="step_delete.php?id=<?= $idStep ?>" title="Elimina step"
                        onclick="return confirm('Eliminare questo step? Gli eventi collegati restano nel progetto e tornano liberi.');">🗑️</a>
@@ -253,6 +306,9 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 &middot; Inizio: <?= ($step['data_inizio'] ?? null) ? formattaData($step['data_inizio']) : '—' ?>
                 &middot; Chiusura: <?= ($step['data_chiusura'] ?? null) ? formattaData($step['data_chiusura']) : '—' ?>
             </p>
+            <?php if ($partecipantiStep): ?>
+                <p class="step-partecipanti">👤 <?= h(implode(', ', array_map('formattaNomePartecipante', $partecipantiStep))) ?></p>
+            <?php endif; ?>
 
             <div class="step-azioni-contenuto">
                 <a class="btn azione-riapertura" href="evento_form.php?fk_step=<?= $idStep ?>">+ Evento</a>
@@ -270,13 +326,169 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
             <?php endif; ?>
 
             <?php foreach ($eventi as $evento): ?>
-                <?php stampaEvento($evento, $allegatiPerEvento, $taskPerEvento, $iconeTipo); ?>
+                <?php stampaEvento($evento, $allegatiPerEvento, $taskPerEvento, $iconeTipo, $partecipantiPerEvento); ?>
             <?php endforeach; ?>
         </div>
     <?php endforeach; ?>
 
     <a class="link-indietro" href="index.php">&larr; Elenco progetti</a>
 </div>
+
+<dialog id="modal-partecipanti" class="modal-partecipanti">
+    <div class="modal-partecipanti-header">
+        <h2 id="modal-partecipanti-titolo">Partecipanti</h2>
+        <button type="button" class="modal-chiudi" data-chiudi-modale title="Chiudi" aria-label="Chiudi">&times;</button>
+    </div>
+    <input type="search" id="modal-partecipanti-cerca" class="modal-partecipanti-cerca" placeholder="🔍 Cerca partecipante...">
+    <div id="modal-partecipanti-lista" class="lista-partecipanti-selezione modal-partecipanti-lista"></div>
+    <div class="modal-partecipanti-azioni">
+        <button type="button" class="btn btn-secondary" data-chiudi-modale>Annulla</button>
+        <button type="button" id="modal-partecipanti-salva" class="btn">Salva</button>
+    </div>
+</dialog>
+
+<script>
+(function () {
+    var modale       = document.getElementById('modal-partecipanti');
+    var titolo        = document.getElementById('modal-partecipanti-titolo');
+    var lista         = document.getElementById('modal-partecipanti-lista');
+    var cerca         = document.getElementById('modal-partecipanti-cerca');
+    var bottoneSalva  = document.getElementById('modal-partecipanti-salva');
+    var scopeCorrente = null;
+    var idCorrente    = null;
+
+    function urlEndpoint(scope, id) {
+        return (scope === 'step' ? 'step_partecipanti.php' : 'evento_partecipanti.php') + '?id=' + encodeURIComponent(id) + '&ajax=1';
+    }
+
+    /**
+     * Riga della lista costruita via DOM (non innerHTML con stringhe interpolate):
+     * cognome/nome/email arrivano dall'anagrafica e potrebbero contenere caratteri
+     * HTML speciali (es. un cognome con un apostrofo o "&"), quindi vanno trattati
+     * come testo, non come markup.
+     */
+    function costruisciRiga(p) {
+        var label = document.createElement('label');
+        label.className = 'partecipante-riga';
+        label.dataset.cerca = (p.nome + ' ' + p.contatti).toLowerCase();
+
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = p.id;
+        checkbox.checked = p.selezionato;
+
+        var nome = document.createElement('span');
+        nome.className = 'partecipante-nome';
+        nome.textContent = p.nome;
+
+        var contatti = document.createElement('span');
+        contatti.className = 'partecipante-contatti';
+        contatti.textContent = p.contatti;
+
+        label.append(checkbox, nome, contatti);
+        return label;
+    }
+
+    function apriModale(scope, id) {
+        scopeCorrente = scope;
+        idCorrente    = id;
+        cerca.value   = '';
+        titolo.textContent = 'Partecipanti';
+        lista.innerHTML = '<p class="nota-campo">Caricamento...</p>';
+        modale.showModal();
+
+        fetch(urlEndpoint(scope, id))
+            .then(function (r) { return r.json(); })
+            .then(function (dati) {
+                if (!dati.ok) {
+                    lista.innerHTML = '';
+                    lista.appendChild(Object.assign(document.createElement('p'), { className: 'errore', textContent: dati.error }));
+                    return;
+                }
+
+                titolo.textContent = dati.titolo;
+                lista.innerHTML = '';
+
+                if (!dati.partecipanti.length) {
+                    var messaggio = document.createElement('p');
+                    messaggio.className = 'nota-campo';
+                    messaggio.textContent = dati.vuotoMessaggio + ' ';
+                    if (dati.vuotoLinkHref) {
+                        var link = document.createElement('a');
+                        link.href = dati.vuotoLinkHref;
+                        link.target = '_blank';
+                        link.textContent = dati.vuotoLinkTesto;
+                        messaggio.appendChild(link);
+                    }
+                    lista.appendChild(messaggio);
+                    return;
+                }
+
+                dati.partecipanti.forEach(function (p) {
+                    lista.appendChild(costruisciRiga(p));
+                });
+            })
+            .catch(function () {
+                lista.innerHTML = '';
+                lista.appendChild(Object.assign(document.createElement('p'), { className: 'errore', textContent: 'Errore di comunicazione con il server.' }));
+            });
+    }
+
+    document.querySelectorAll('.btn-partecipanti').forEach(function (bottone) {
+        bottone.addEventListener('click', function (e) {
+            // I bottoni sugli eventi vivono dentro <summary>: senza queste due righe
+            // il click aprirebbe la modale E (ri)aprirebbe/chiuderebbe l'evento.
+            e.preventDefault();
+            e.stopPropagation();
+            apriModale(bottone.getAttribute('data-scope'), bottone.getAttribute('data-id'));
+        });
+    });
+
+    cerca.addEventListener('input', function () {
+        var q = cerca.value.trim().toLowerCase();
+        lista.querySelectorAll('.partecipante-riga').forEach(function (riga) {
+            riga.classList.toggle('modal-partecipanti-riga-nascosta', riga.dataset.cerca.indexOf(q) === -1);
+        });
+    });
+
+    modale.querySelectorAll('[data-chiudi-modale]').forEach(function (bottone) {
+        bottone.addEventListener('click', function () { modale.close(); });
+    });
+
+    // Click sullo sfondo (il target è la <dialog> stessa, non un suo discendente).
+    modale.addEventListener('click', function (e) {
+        if (e.target === modale) {
+            modale.close();
+        }
+    });
+
+    bottoneSalva.addEventListener('click', function () {
+        var selezionati = Array.from(lista.querySelectorAll('input[type="checkbox"]:checked')).map(function (c) { return c.value; });
+        var corpo = selezionati.map(function (id) { return 'partecipanti[]=' + encodeURIComponent(id); }).join('&');
+
+        fetch(urlEndpoint(scopeCorrente, idCorrente), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: corpo
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (risposta) {
+                if (!risposta.ok) {
+                    alert('Errore: ' + risposta.error);
+                    return;
+                }
+                // Ricarica sulla card interessata: più semplice e robusto che rimettere
+                // a mano in sincronia badge/chip nel DOM (che potrebbero non esistere
+                // ancora, es. primo partecipante appena aggiunto).
+                var ancora = (scopeCorrente === 'step' ? 'step-' : 'evento-') + idCorrente;
+                window.location.href = 'progetto_view.php?id=<?= $idProgetto ?>&_=' + Date.now() + '#' + ancora;
+            })
+            .catch(function () {
+                alert('Errore di comunicazione con il server.');
+            });
+    });
+})();
+</script>
 
 <script>
 document.querySelectorAll('[data-evento-id]').forEach(function (el) {

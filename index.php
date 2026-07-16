@@ -24,7 +24,10 @@ $progetti = $pdo->query(
 <body>
 <div class="contenitore">
     <h1>Gestione Progetti</h1>
-    <a class="btn" href="progetto_form.php">+ Nuovo progetto</a>
+    <div class="azioni">
+        <a class="btn" href="progetto_form.php">+ Nuovo progetto</a>
+        <a class="btn btn-secondary" href="partecipanti.php">👤 Gestione partecipanti</a>
+    </div>
 
     <table class="elenco">
         <thead>

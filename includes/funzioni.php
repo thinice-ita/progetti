@@ -71,6 +71,29 @@ function etichettaPillolaTask(array $task): string
     return count($task) . ' task · ' . ($nonFatti > 0 ? $nonFatti . ' da fare' : 'tutti fatti');
 }
 
+/**
+ * "Cognome Nome" di un partecipante, tollerando l'assenza dell'uno o dell'altro
+ * (entrambi i campi sono nullable in anagrafica, es. per righe importate incomplete).
+ */
+function formattaNomePartecipante(array $p): string
+{
+    return trim(trim((string) ($p['cognome'] ?? '')) . ' ' . trim((string) ($p['nome'] ?? '')));
+}
+
+/**
+ * Riga di un partecipante nel formato usato dalle risposte JSON delle pagine di
+ * selezione (step_partecipanti.php, evento_partecipanti.php), consumate dalla
+ * modale in progetto_view.php.
+ */
+function datiPartecipanteJson(array $p): array
+{
+    return [
+        'id'       => (int) $p['id_partecipante'],
+        'nome'     => formattaNomePartecipante($p) ?: '(senza nome)',
+        'contatti' => trim(($p['email'] ?? '') . ($p['cellulare'] ? ' · ' . $p['cellulare'] : '')),
+    ];
+}
+
 function redirect(string $url): void
 {
     header('Location: ' . $url);

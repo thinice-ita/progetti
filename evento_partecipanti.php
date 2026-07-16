@@ -118,9 +118,10 @@ if ($ajax) {
         </p>
     <?php else: ?>
         <form method="post">
+            <input type="search" id="cerca-partecipanti" class="modal-partecipanti-cerca" placeholder="🔍 Cerca partecipante...">
             <div class="lista-partecipanti-selezione">
                 <?php foreach ($pool as $p): ?>
-                    <label class="partecipante-riga">
+                    <label class="partecipante-riga" data-cerca="<?= h(strtolower(formattaNomePartecipante($p) . ' ' . trim(($p['email'] ?? '') . ' ' . ($p['cellulare'] ?? '')))) ?>">
                         <input type="checkbox" name="partecipanti[]" value="<?= (int) $p['id_partecipante'] ?>"
                             <?= in_array((int) $p['id_partecipante'], $selezionatiAttuali, true) ? 'checked' : '' ?>>
                         <span class="partecipante-nome"><?= h(formattaNomePartecipante($p)) ?: '(senza nome)' ?></span>
@@ -136,5 +137,16 @@ if ($ajax) {
 
     <a class="link-indietro" href="progetto_view.php?id=<?= $fkProgetto ?>">&larr; Torna al progetto</a>
 </div>
+<script>
+var cercaPartecipanti = document.getElementById('cerca-partecipanti');
+if (cercaPartecipanti) {
+    cercaPartecipanti.addEventListener('input', function () {
+        var q = this.value.trim().toLowerCase();
+        document.querySelectorAll('.lista-partecipanti-selezione .partecipante-riga').forEach(function (riga) {
+            riga.classList.toggle('modal-partecipanti-riga-nascosta', riga.dataset.cerca.indexOf(q) === -1);
+        });
+    });
+}
+</script>
 </body>
 </html>

@@ -14,6 +14,19 @@ $email          = '';
 $cellulare      = '';
 $errore         = '';
 
+// Se si arriva dalla selezione partecipanti di un progetto (manca chi si sta
+// cercando), il nuovo partecipante va aggiunto subito al roster di quel
+// progetto e si torna lì, invece che all'anagrafica generale.
+$fkProgetto = isset($_GET['fk_progetto']) ? (int) $_GET['fk_progetto'] : (isset($_POST['fk_progetto']) ? (int) $_POST['fk_progetto'] : 0);
+
+if ($fkProgetto > 0) {
+    $stmt = $pdo->prepare('SELECT 1 FROM progetti WHERE id_progetto = ?');
+    $stmt->execute([$fkProgetto]);
+    if (!$stmt->fetch()) {
+        $fkProgetto = 0;
+    }
+}
+
 if ($idPartecipante > 0) {
     $stmt = $pdo->prepare('SELECT * FROM partecipanti WHERE id_partecipante = ?');
     $stmt->execute([$idPartecipante]);
@@ -51,9 +64,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt = $pdo->prepare('INSERT INTO partecipanti (cognome, nome, email, cellulare) VALUES (?,?,?,?)');
             $stmt->execute($params);
+            $idPartecipante = (int) $pdo->lastInsertId();
+
+            if ($fkProgetto > 0) {
+                $pdo->prepare('INSERT INTO progetto_partecipanti (fk_progetto, fk_partecipante) VALUES (?, ?)')
+                    ->execute([$fkProgetto, $idPartecipante]);
+            }
         }
 
-        redirect('partecipanti.php');
+        redirect($fkProgetto > 0 ? 'progetto_partecipanti.php?id=' . $fkProgetto : 'partecipanti.php');
     }
 }
 ?>
@@ -73,6 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="post">
+        <?php if ($fkProgetto > 0): ?>
+            <input type="hidden" name="fk_progetto" value="<?= $fkProgetto ?>">
+        <?php endif; ?>
         <div class="campi-riga">
             <div>
                 <label for="cognome">Cognome</label>
@@ -94,10 +116,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" id="cellulare" name="cellulare" value="<?= h($cellulare) ?>">
             </div>
         </div>
-        <p class="nota-campo">Almeno uno tra cognome e nome è obbligatorio.</p>
+        <p class="nota-campo">Almeno uno tra cognome e nome è obbligatorio.
+            <?php if ($fkProgetto > 0 && $idPartecipante === 0): ?>
+                Salvando, verrà aggiunto subito al progetto.
+            <?php endif; ?>
+        </p>
 
         <button type="submit">Salva</button>
-        <a class="btn btn-secondary" href="partecipanti.php">Annulla</a>
+        <a class="btn btn-secondary" href="<?= $fkProgetto > 0 ? 'progetto_partecipanti.php?id=' . $fkProgetto : 'partecipanti.php' ?>">Annulla</a>
     </form>
 </div>
 </body>

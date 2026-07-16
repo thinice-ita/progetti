@@ -224,7 +224,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
         &middot; <strong>Chiusura:</strong> <?= $progetto['data_chiusura'] ? formattaData($progetto['data_chiusura']) : 'in corso' ?>
     </p>
 
-    <div class="azioni">
+    <div class="azioni-principali">
         <a class="btn btn-secondary" href="progetto_form.php?id=<?= $idProgetto ?>">Modifica progetto</a>
         <a class="btn btn-secondary" href="linea-tempo.php?id=<?= $idProgetto ?>">🕰️ Linea del tempo</a>
         <a class="btn btn-secondary" href="progetto_partecipanti.php?id=<?= $idProgetto ?>">👤 Partecipanti<?= $partecipantiProgetto ? ' (' . count($partecipantiProgetto) . ')' : '' ?></a>
@@ -481,7 +481,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 // a mano in sincronia badge/chip nel DOM (che potrebbero non esistere
                 // ancora, es. primo partecipante appena aggiunto).
                 var ancora = (scopeCorrente === 'step' ? 'step-' : 'evento-') + idCorrente;
-                window.location.href = 'progetto_view.php?id=<?= $idProgetto ?>&_=' + Date.now() + '#' + ancora;
+                window.location.href = 'progetto_view.php?id=<?= $idProgetto ?>&_=' + Date.now() + '&restaChiuso=1#' + ancora;
             })
             .catch(function () {
                 alert('Errore di comunicazione con il server.');
@@ -882,6 +882,10 @@ function evidenziaTesto(radice, query) {
  * il relativo <details> anche nei browser che non lo fanno da soli seguendo
  * l'ancora, ci scorre sopra, evidenzia la parola cercata e dopo 5 secondi
  * toglie l'evidenziazione (dissolvenza, poi rimozione dei <mark>).
+ *
+ * Il salvataggio partecipanti (via modale) ricarica anch'esso sull'ancora
+ * dell'evento/step, ma solo per scorrerci sopra: aggiunge "restaChiuso=1"
+ * apposta per NON farlo aprire se era chiuso.
  */
 (function () {
     if (!location.hash) {
@@ -891,7 +895,8 @@ function evidenziaTesto(radice, query) {
     if (!bersaglio) {
         return;
     }
-    if (bersaglio.tagName === 'DETAILS') {
+    var restaChiuso = new URLSearchParams(location.search).get('restaChiuso') === '1';
+    if (bersaglio.tagName === 'DETAILS' && !restaChiuso) {
         bersaglio.open = true;
     }
     bersaglio.scrollIntoView({ block: 'center' });

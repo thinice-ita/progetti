@@ -62,7 +62,7 @@ $stmt = $pdo->prepare(
     'SELECT p.*, (pp.fk_progetto IS NOT NULL) AS selezionato
      FROM partecipanti p
      LEFT JOIN progetto_partecipanti pp ON pp.fk_partecipante = p.id_partecipante AND pp.fk_progetto = ?
-     ORDER BY p.cognome, p.nome'
+     ORDER BY selezionato DESC, p.cognome, p.nome'
 );
 $stmt->execute([$idProgetto]);
 $partecipanti = $stmt->fetchAll();
@@ -81,19 +81,22 @@ $partecipanti = $stmt->fetchAll();
     selezionato qui potrà poi essere assegnato a singoli step ed eventi.</p>
 
     <?php if (!$partecipanti): ?>
-        <p><em>Nessun partecipante in anagrafica.</em> <a href="partecipante_form.php" target="_blank">Aggiungine uno</a>,
-        poi ricarica questa pagina.</p>
+        <p><em>Nessun partecipante in anagrafica.</em>
+        <a href="partecipante_form.php?fk_progetto=<?= $idProgetto ?>">Aggiungine uno</a>: verrà aggiunto subito a questo progetto.</p>
     <?php else: ?>
         <form method="post">
+            <input type="search" id="cerca-partecipanti" class="modal-partecipanti-cerca" placeholder="🔍 Cerca partecipante...">
             <div class="lista-partecipanti-selezione">
                 <?php foreach ($partecipanti as $p): ?>
-                    <label class="partecipante-riga">
+                    <label class="partecipante-riga" data-cerca="<?= h(strtolower(formattaNomePartecipante($p) . ' ' . trim(($p['email'] ?? '') . ' ' . ($p['cellulare'] ?? '')))) ?>">
                         <input type="checkbox" name="partecipanti[]" value="<?= (int) $p['id_partecipante'] ?>" <?= $p['selezionato'] ? 'checked' : '' ?>>
                         <span class="partecipante-nome"><?= h(formattaNomePartecipante($p)) ?: '(senza nome)' ?></span>
                         <span class="partecipante-contatti"><?= h(trim(($p['email'] ?? '') . ($p['cellulare'] ? ' · ' . $p['cellulare'] : ''))) ?></span>
                     </label>
                 <?php endforeach; ?>
             </div>
+            <p class="nota-campo">Non trovi chi cerchi? <a href="partecipante_form.php?fk_progetto=<?= $idProgetto ?>">Aggiungi una nuova scheda partecipante</a>
+            (verrà aggiunto subito a questo progetto; salva prima le spunte fatte qui, altrimenti si perdono).</p>
 
             <button type="submit">Salva</button>
             <a class="btn btn-secondary" href="progetto_view.php?id=<?= $idProgetto ?>">Annulla</a>
@@ -104,5 +107,16 @@ $partecipanti = $stmt->fetchAll();
 
     <a class="link-indietro" href="progetto_view.php?id=<?= $idProgetto ?>">&larr; Torna al progetto</a>
 </div>
+<script>
+var cercaPartecipanti = document.getElementById('cerca-partecipanti');
+if (cercaPartecipanti) {
+    cercaPartecipanti.addEventListener('input', function () {
+        var q = this.value.trim().toLowerCase();
+        document.querySelectorAll('.lista-partecipanti-selezione .partecipante-riga').forEach(function (riga) {
+            riga.classList.toggle('modal-partecipanti-riga-nascosta', riga.dataset.cerca.indexOf(q) === -1);
+        });
+    });
+}
+</script>
 </body>
 </html>

@@ -373,6 +373,12 @@
     .azioni { display: flex; gap: 0.3rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0; margin-left: auto; }
     .azioni a { flex-shrink: 0; }
     .azioni-icone { gap: 0.2rem; }
+
+    /* Barra di azioni testuali a livello di progetto (Modifica/Linea del tempo/
+       Partecipanti/Nuovo step/...): a differenza delle altre ".azioni" (righe
+       icone, righe di tabella) qui i pulsanti sono tanti e con testo, quindi
+       devono poter andare a capo invece di uscire dal contenitore. */
+    .azioni-principali { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
     .icona-azione {
         display: inline-flex;
         align-items: center;

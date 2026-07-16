@@ -22,6 +22,7 @@ $progetto = null;
 $step     = null;
 $evento   = null;
 $stepList = [];
+$partecipantiProgetto = [];
 
 if ($tipo === 'progetto') {
     $stmt = $pdo->prepare('SELECT * FROM progetti WHERE id_progetto = ?');
@@ -37,6 +38,14 @@ if ($tipo === 'progetto') {
     $stmt = $pdo->prepare('SELECT * FROM step WHERE fk_progetto = ? ORDER BY ordine, id_step');
     $stmt->execute([$id]);
     $stepList = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare(
+        'SELECT p.* FROM partecipanti p
+         JOIN progetto_partecipanti pp ON pp.fk_partecipante = p.id_partecipante
+         WHERE pp.fk_progetto = ? ORDER BY p.cognome, p.nome'
+    );
+    $stmt->execute([$id]);
+    $partecipantiProgetto = $stmt->fetchAll();
 } elseif ($tipo === 'step') {
     $stmt = $pdo->prepare('SELECT * FROM step WHERE id_step = ?');
     $stmt->execute([$id]);
@@ -102,7 +111,14 @@ $titoloPagina = 'Cartellina ' . $tipo . ' — ' . ($progetto['titolo'] ?? '');
        diventa subito una cartellina pronta all'uso. */
     .cartellina-foglio { display: flex; width: 420mm; height: 297mm; }
     .cartellina-colonna { width: 210mm; height: 297mm; }
-    .cartellina-colonna-destra { padding: 20mm 18mm; }
+    .cartellina-colonna-destra { position: relative; padding: 20mm 18mm; }
+
+    /* Ancorati in basso a sinistra della colonna, indipendentemente da quanto
+       contenuto c'è sopra (lista step corta o assente). */
+    .cartellina-partecipanti { position: absolute; left: 18mm; right: 18mm; bottom: 20mm; }
+    .cartellina-elenco-partecipanti { margin: 0; padding-left: 1.2rem; font-size: 0.9rem; color: #333; }
+    .cartellina-elenco-partecipanti li { margin-bottom: 0.25rem; }
+    .cartellina-elenco-partecipanti-contatti { color: #777; margin-left: 0.4rem; }
 
     .cartellina-blocco { margin-bottom: 2.4rem; }
     .cartellina-blocco + .cartellina-blocco { padding-top: 1.8rem; border-top: 1px solid #ddd; }
@@ -175,6 +191,20 @@ $titoloPagina = 'Cartellina ' . $tipo . ' — ' . ($progetto['titolo'] ?? '');
                             <li>
                                 <?= h($s['nome']) ?>
                                 <span class="cartellina-elenco-step-data">— alla data del <?= formattaData($s['data_apertura']) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($partecipantiProgetto): ?>
+                <div class="cartellina-partecipanti">
+                    <div class="cartellina-etichetta">Partecipanti</div>
+                    <ul class="cartellina-elenco-partecipanti">
+                        <?php foreach ($partecipantiProgetto as $pp): ?>
+                            <li>
+                                <?= h(formattaNomePartecipante($pp)) ?: '(senza nome)' ?>
+                                <span class="cartellina-elenco-partecipanti-contatti"><?= h(trim(($pp['email'] ?? '') . ($pp['cellulare'] ? ' · ' . $pp['cellulare'] : ''))) ?></span>
                             </li>
                         <?php endforeach; ?>
                     </ul>

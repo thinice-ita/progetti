@@ -9,7 +9,8 @@ $pdo = dbConnect();
 
 $progetti = $pdo->query(
     "SELECT p.id_progetto, p.titolo, p.data_apertura, p.data_chiusura,
-            (SELECT COUNT(*) FROM step s WHERE s.fk_progetto = p.id_progetto) AS tot_step
+            (SELECT COUNT(*) FROM step s WHERE s.fk_progetto = p.id_progetto) AS tot_step,
+            (SELECT COUNT(*) FROM progetto_partecipanti pp WHERE pp.fk_progetto = p.id_progetto) AS tot_partecipanti
      FROM progetti p
      ORDER BY (p.data_chiusura IS NOT NULL), p.data_apertura DESC"
 )->fetchAll();
@@ -31,11 +32,11 @@ $progetti = $pdo->query(
 
     <table class="elenco">
         <thead>
-        <tr><th>Titolo</th><th>Aperto il</th><th>Chiuso il</th><th>Step</th><th>Azioni</th></tr>
+        <tr><th>Titolo</th><th>Aperto il</th><th>Chiuso il</th><th>Step</th><th>Partecipanti</th><th>Azioni</th></tr>
         </thead>
         <tbody>
         <?php if (!$progetti): ?>
-            <tr><td colspan="5">Nessun progetto presente.</td></tr>
+            <tr><td colspan="6">Nessun progetto presente.</td></tr>
         <?php else: ?>
             <?php foreach ($progetti as $p): ?>
                 <tr>
@@ -43,6 +44,7 @@ $progetti = $pdo->query(
                     <td><?= formattaData($p['data_apertura']) ?></td>
                     <td><?= $p['data_chiusura'] ? formattaData($p['data_chiusura']) : '—' ?></td>
                     <td><?= (int) $p['tot_step'] ?></td>
+                    <td><?= (int) $p['tot_partecipanti'] ?></td>
                     <td class="azioni">
                         <a class="btn" href="progetto_view.php?id=<?= (int) $p['id_progetto'] ?>">Apri</a>
                         <a class="btn btn-secondary" href="progetto_form.php?id=<?= (int) $p['id_progetto'] ?>">Modifica</a>

@@ -70,9 +70,29 @@ function trascriviAudio(string $percorsoFile, string $apiKey): string
  * @return string              Risposta completa generata dal modello
  * @throws Exception           In caso di errore di rete o risposta inattesa dall'API
  */
+function calcolaTargetSintesi(int $numeroParole): array
+{
+    if ($numeroParole < 600) {
+        return ['puntiMin' => 1, 'puntiMax' => 2, 'righeMin' => 2, 'righeMax' => 3];
+    }
+    if ($numeroParole < 1200) {
+        return ['puntiMin' => 2, 'puntiMax' => 4, 'righeMin' => 3, 'righeMax' => 4];
+    }
+    if ($numeroParole < 2000) {
+        return ['puntiMin' => 4, 'puntiMax' => 6, 'righeMin' => 4, 'righeMax' => 5];
+    }
+    if ($numeroParole < 3500) {
+        return ['puntiMin' => 6, 'puntiMax' => 9, 'righeMin' => 5, 'righeMax' => 6];
+    }
+    return ['puntiMin' => 9, 'puntiMax' => 14, 'righeMin' => 6, 'righeMax' => 8];
+}
+
 function generaSintesi(string $trascrizione, string $apiKey): string
 {
     $url = 'https://api.openai.com/v1/chat/completions';
+
+    $numeroParole = count(preg_split('/\s+/u', trim($trascrizione), -1, PREG_SPLIT_NO_EMPTY));
+    $target       = calcolaTargetSintesi($numeroParole);
 
     $promptSistema =
         "Sei un assistente che analizza la trascrizione di una riunione aziendale in italiano. " .
@@ -83,13 +103,20 @@ function generaSintesi(string $trascrizione, string $apiKey): string
         "di persone o il settore coinvolto. Esempi: \"Titolo: Riunione soci zona Treviso\", " .
         "\"Titolo: Incontro aziende cerealicole\". Non includere la data nel titolo.\n\n" .
         "PARTE 2 - SINTESI: dopo una riga vuota, prosegui con la sintesi vera e propria, dettagliata ma chiara, " .
-        "strutturata ESATTAMENTE nelle tre sezioni seguenti, in formato Markdown:\n\n" .
+        "strutturata ESATTAMENTE nelle tre sezioni seguenti, in formato Markdown.\n\n" .
+        "La trascrizione fornita contiene circa {$numeroParole} parole. La lunghezza e il livello di dettaglio " .
+        "della sintesi devono essere PROPORZIONALI alla quantità di contenuto, secondo queste regole:\n\n" .
         "## Punti principali\n" .
-        "Elenco puntato breve (una riga per punto) dei principali argomenti trattati durante la riunione.\n\n" .
+        "Elenco puntato (una riga per punto) dei principali argomenti trattati durante la riunione. Il numero " .
+        "di punti deve essere tra {$target['puntiMin']} e {$target['puntiMax']}. Se la trascrizione tratta " .
+        "davvero meno argomenti distinti di {$target['puntiMin']}, non inventarne di artificiosi: elencane " .
+        "quanti ne trovi realmente. Non accorpare argomenti diversi in un unico punto solo per restare sotto " .
+        "il minimo.\n\n" .
         "## Approfondimento\n" .
         "Per OGNI punto elencato sopra, ripeti il punto come sottotitolo (\"### Nome del punto\") seguito da " .
-        "un paragrafo di circa 3-5 righe che ne descrive i dettagli, il contesto, le eventuali decisioni prese " .
-        "e le posizioni espresse dai partecipanti, basandoti solo su quanto effettivamente detto nella trascrizione.\n\n" .
+        "un paragrafo di circa {$target['righeMin']}-{$target['righeMax']} righe che ne descrive i dettagli, " .
+        "il contesto, le eventuali decisioni prese e le posizioni espresse dai partecipanti, basandoti solo su " .
+        "quanto effettivamente detto nella trascrizione.\n\n" .
         "## Task assegnati\n" .
         "- elenco puntato nel formato \"Nome persona - descrizione del task\". " .
         "Se dal testo non è possibile individuare un responsabile, usa \"Da assegnare - descrizione del task\". " .

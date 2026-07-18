@@ -162,9 +162,24 @@ $titoloPagina = 'Cartellina ' . $tipo . ' — ' . ($progetto['titolo'] ?? '');
 <body>
 
 <div class="stampa-toolbar">
+    <?php if ($tipo === 'progetto' && $stepList): ?>
+        <button type="button" id="toggle-step-btn" onclick="toggleBloccoStep()">👁️ Mostra/nascondi step</button>
+    <?php endif; ?>
     <button type="button" onclick="window.print()">🖨️ Stampa (A3 orizzontale)</button>
     <button type="button" onclick="window.close()">Chiudi</button>
 </div>
+
+<?php if ($tipo === 'progetto' && $stepList): ?>
+<script>
+function toggleBloccoStep() {
+    var blocco = document.getElementById('blocco-step');
+    if (!blocco) {
+        return;
+    }
+    blocco.style.display = blocco.style.display === 'none' ? '' : 'none';
+}
+</script>
+<?php endif; ?>
 
 <div class="cartellina-foglio">
     <div class="cartellina-colonna cartellina-colonna-sinistra"></div>
@@ -184,7 +199,7 @@ $titoloPagina = 'Cartellina ' . $tipo . ' — ' . ($progetto['titolo'] ?? '');
             </div>
 
             <?php if ($stepList): ?>
-                <div class="cartellina-blocco">
+                <div class="cartellina-blocco" id="blocco-step">
                     <div class="cartellina-etichetta">Step</div>
                     <ul class="cartellina-elenco-step">
                         <?php foreach ($stepList as $s): ?>
@@ -203,7 +218,7 @@ $titoloPagina = 'Cartellina ' . $tipo . ' — ' . ($progetto['titolo'] ?? '');
                     <ul class="cartellina-elenco-partecipanti">
                         <?php foreach ($partecipantiProgetto as $pp): ?>
                             <li>
-                                <?= h(formattaNomePartecipante($pp)) ?: '(senza nome)' ?>
+                                <?= h(mb_strtoupper(formattaNomePartecipante($pp))) ?: '(senza nome)' ?>
                                 <span class="cartellina-elenco-partecipanti-contatti"><?= h(trim(($pp['email'] ?? '') . ($pp['cellulare'] ? ' · ' . $pp['cellulare'] : ''))) ?></span>
                             </li>
                         <?php endforeach; ?>

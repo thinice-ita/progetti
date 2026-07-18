@@ -222,6 +222,15 @@
     .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
     .step-date { font-size: 0.78rem; color: var(--ink-soft); margin: -0.2rem 0 0.6rem; font-variant-numeric: tabular-nums; }
 
+    /* Titolo dello step: cliccabile per comprimere/espandere il corpo (bottoni
+       +Evento/Registrazione, descrizione, ordinamento ed elenco eventi), per
+       avere una vista d'insieme di tutti gli step senza scrollare a lungo. */
+    .step-titolo-toggle { cursor: pointer; user-select: none; }
+    .step-titolo-toggle:hover { text-decoration: underline; }
+    .step-titolo-freccia { display: inline-block; transition: transform .15s ease; }
+    .step-card.step-collassato .step-titolo-freccia { transform: rotate(-90deg); }
+    .step-card.step-collassato .step-corpo { display: none; }
+
     /* Step "completato": aspetto disattivato/grigio, ma resta interattivo (drag&drop
        e "+Nuovo" chiedono conferma e riaprono lo step invece di essere bloccati). */
     .step-card.step-chiuso { background: var(--neutral-soft) !important; border-color: var(--rule) !important; opacity: 0.72; }

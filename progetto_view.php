@@ -327,6 +327,9 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
 
     <div class="step-sezione-intestazione">
         <h2>Step</h2>
+        <?php if ($stepList): ?>
+            <button type="button" id="toggla-tutti-step" class="btn-stampa">🔽 Collassa gli step</button>
+        <?php endif; ?>
         <?php if (count($stepList) > 1): ?>
             <a class="btn-stampa" href="step_ripristina_ordine.php?id=<?= $idProgetto ?>"
                onclick="return confirm('Ripristinare l\'ordine degli step a quello di creazione?\n\nLe posizioni spostate con le frecce andranno perse.');">↺ Ripristina ordinamento step</a>
@@ -342,7 +345,7 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
              data-drop-step="<?= $idStep ?>" data-step-stato="<?= h($step['stato']) ?>" data-step-nome="<?= h($step['nome']) ?>">
             <div class="step-header">
                 <div>
-                    <strong><?= h($step['nome']) ?></strong>
+                    <strong class="step-titolo-toggle" title="Comprimi/espandi step"><span class="step-titolo-freccia">▾</span> <?= h($step['nome']) ?></strong>
                     <span class="badge badge-<?= h($step['stato']) ?>"><?= h($etichetteStato[$step['stato']] ?? $step['stato']) ?></span>
                 </div>
                 <div class="azioni azioni-icone">
@@ -378,40 +381,42 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 <p class="step-partecipanti">👤 <?= h(implode(', ', array_map('formattaNomePartecipante', $partecipantiStep))) ?></p>
             <?php endif; ?>
 
-            <div class="step-azioni-contenuto">
-                <a class="btn azione-riapertura" href="evento_form.php?fk_step=<?= $idStep ?>">+ Evento</a>
-                <a class="btn azione-riapertura" href="registrazione_form.php?fk_step=<?= $idStep ?>">🎙️ Registrazione</a>
-            </div>
+            <div class="step-corpo">
+                <div class="step-azioni-contenuto">
+                    <a class="btn azione-riapertura" href="evento_form.php?fk_step=<?= $idStep ?>">+ Evento</a>
+                    <a class="btn azione-riapertura" href="registrazione_form.php?fk_step=<?= $idStep ?>">🎙️ Registrazione</a>
+                </div>
 
-            <?php if ($step['descrizione']): ?>
-                <p><?= nl2br(h($step['descrizione'])) ?></p>
-            <?php endif; ?>
+                <?php if ($step['descrizione']): ?>
+                    <p><?= nl2br(h($step['descrizione'])) ?></p>
+                <?php endif; ?>
 
-            <?php $eventi = $eventiPerStep[$idStep] ?? []; ?>
-            <?php $sezioneStep = 'step' . $idStep; [$campoStep, $direzioneStep] = $ordinamentoPerSezione[$sezioneStep]; ?>
+                <?php $eventi = $eventiPerStep[$idStep] ?? []; ?>
+                <?php $sezioneStep = 'step' . $idStep; [$campoStep, $direzioneStep] = $ordinamentoPerSezione[$sezioneStep]; ?>
 
-            <?php if ($eventi): ?>
-                <form method="get" class="ordina-form">
-                    <input type="hidden" name="id" value="<?= $idProgetto ?>">
-                    <?php campiNascostiOrdinamento($ordinamentoPerSezione, $sezioneStep); ?>
-                    <span>Ordina per
-                        <select name="ordina_<?= $sezioneStep ?>" onchange="this.form.submit()">
-                            <option value="data_evento" <?= $campoStep === 'data_evento' ? 'selected' : '' ?>>Data evento</option>
-                            <option value="creato_il" <?= $campoStep === 'creato_il' ? 'selected' : '' ?>>Data caricamento</option>
+                <?php if ($eventi): ?>
+                    <form method="get" class="ordina-form">
+                        <input type="hidden" name="id" value="<?= $idProgetto ?>">
+                        <?php campiNascostiOrdinamento($ordinamentoPerSezione, $sezioneStep); ?>
+                        <span>Ordina per
+                            <select name="ordina_<?= $sezioneStep ?>" onchange="this.form.submit()">
+                                <option value="data_evento" <?= $campoStep === 'data_evento' ? 'selected' : '' ?>>Data evento</option>
+                                <option value="creato_il" <?= $campoStep === 'creato_il' ? 'selected' : '' ?>>Data caricamento</option>
+                            </select>
+                        </span>
+                        <select name="dir_<?= $sezioneStep ?>" onchange="this.form.submit()">
+                            <option value="desc" <?= $direzioneStep === 'DESC' ? 'selected' : '' ?>>Decrescente (più recenti prima)</option>
+                            <option value="asc" <?= $direzioneStep === 'ASC' ? 'selected' : '' ?>>Crescente (più vecchi prima)</option>
                         </select>
-                    </span>
-                    <select name="dir_<?= $sezioneStep ?>" onchange="this.form.submit()">
-                        <option value="desc" <?= $direzioneStep === 'DESC' ? 'selected' : '' ?>>Decrescente (più recenti prima)</option>
-                        <option value="asc" <?= $direzioneStep === 'ASC' ? 'selected' : '' ?>>Crescente (più vecchi prima)</option>
-                    </select>
-                </form>
-            <?php else: ?>
-                <p><em>Nessun evento in questo step. Trascina qui un evento libero.</em></p>
-            <?php endif; ?>
+                    </form>
+                <?php else: ?>
+                    <p><em>Nessun evento in questo step. Trascina qui un evento libero.</em></p>
+                <?php endif; ?>
 
-            <?php foreach ($eventi as $evento): ?>
-                <?php stampaEvento($evento, $allegatiPerEvento, $taskPerEvento, $iconeTipo, $partecipantiPerEvento); ?>
-            <?php endforeach; ?>
+                <?php foreach ($eventi as $evento): ?>
+                    <?php stampaEvento($evento, $allegatiPerEvento, $taskPerEvento, $iconeTipo, $partecipantiPerEvento); ?>
+                <?php endforeach; ?>
+            </div>
         </div>
     <?php endforeach; ?>
 
@@ -571,6 +576,71 @@ function stampaEvento(array $evento, array $allegatiPerEvento, array $taskPerEve
                 alert('Errore di comunicazione con il server.');
             });
     });
+})();
+</script>
+
+<script>
+(function () {
+    var schede = document.querySelectorAll('.step-card');
+    var bottoneTutti = document.getElementById('toggla-tutti-step');
+    if (!schede.length) {
+        return;
+    }
+
+    // Persiste lo stato compresso/espanso per step id (non per posizione): così
+    // sopravvive al ricaricamento della pagina fatto da step_sposta.php quando
+    // si sposta uno step su/giù con le frecce.
+    function chiaveStorage(scheda) {
+        return 'step-collassato-' + scheda.id;
+    }
+
+    function salvaStato(scheda) {
+        if (scheda.classList.contains('step-collassato')) {
+            localStorage.setItem(chiaveStorage(scheda), '1');
+        } else {
+            localStorage.removeItem(chiaveStorage(scheda));
+        }
+    }
+
+    schede.forEach(function (scheda) {
+        scheda.classList.toggle('step-collassato', localStorage.getItem(chiaveStorage(scheda)) === '1');
+    });
+
+    function aggiornaEtichettaGlobale() {
+        if (!bottoneTutti) {
+            return;
+        }
+        var tutteCollassate = Array.from(schede).every(function (scheda) {
+            return scheda.classList.contains('step-collassato');
+        });
+        bottoneTutti.textContent = tutteCollassate ? '🔼 Espandi gli step' : '🔽 Collassa gli step';
+    }
+    aggiornaEtichettaGlobale();
+
+    schede.forEach(function (scheda) {
+        var titolo = scheda.querySelector('.step-titolo-toggle');
+        if (!titolo) {
+            return;
+        }
+        titolo.addEventListener('click', function () {
+            scheda.classList.toggle('step-collassato');
+            salvaStato(scheda);
+            aggiornaEtichettaGlobale();
+        });
+    });
+
+    if (bottoneTutti) {
+        bottoneTutti.addEventListener('click', function () {
+            var tutteCollassate = Array.from(schede).every(function (scheda) {
+                return scheda.classList.contains('step-collassato');
+            });
+            schede.forEach(function (scheda) {
+                scheda.classList.toggle('step-collassato', !tutteCollassate);
+                salvaStato(scheda);
+            });
+            aggiornaEtichettaGlobale();
+        });
+    }
 })();
 </script>
 
